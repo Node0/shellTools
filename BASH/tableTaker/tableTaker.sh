@@ -11,15 +11,15 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+#
+# General Information
+# ----------------------------------------------------------------
 # Name: TableTaker.sh
+# Version: v0.1
+# Author: Joe Hacobian
+# Usage: Run without parameters for usage info.
 # Description: Dump MySQL table data into separate SQL files for a specified database.
-# Usage: Run without args for usage info.
-# Author: @JoeHacobian
-# Notes:
-#  * Script will prompt for password for db access.
-#  * Output files are compressed and saved in the current working dir, unless DIR is
-#    specified on command-line.
+
 
 
 ### Disclaimer
@@ -41,7 +41,7 @@
 
 
 if [[ ${#} < 3 ]]
-    then
+then
     echo "Usage: $(basename "$0") <DB_HOST> <DB_USER> <DB_NAME> [--outputdir=foo] [--compress or --nocompress]";
     echo "Note: The output directory is optional, as is compression. Un-compressed SQL output is default behavior.";
     exit 1
@@ -54,40 +54,40 @@ DB=$3
 #Determine if we're going to compress the output
 argv=("${@}");
 for param in "${argv[@]}";
-do 
-setOutputDir=$(echo "${param}" | command grep -Pic "\-\-outputdir\=");
+do
+    setOutputDir=$(echo "${param}" | command grep -Pic "\-\-outputdir\=");
 
-if [[ "${setOutputDir}" == "1" ]]; then
-    outPutDirString=$(echo "${param}" |command sed -r "s~(\-\-outputdir\=)~~g");
-    OUTPUTDIR="${outPutDirString}";
-fi
+    if [[ "${setOutputDir}" == "1" ]]; then
+        outPutDirString=$(echo "${param}" |command sed -r "s~(\-\-outputdir\=)~~g");
+        OUTPUTDIR="${outPutDirString}";
+    fi
 done;
 
 for param in "${argv[@]}";
 do
-setCmpressTest=$(echo "${param}" | command grep -Pic "\-\-compress");
-if [[ "${setCmpressTest}" > 0 ]]; then
-    setCompress="1";
-fi
+    setCmpressTest=$(echo "${param}" | command grep -Pic "\-\-compress");
+    if [[ "${setCmpressTest}" > 0 ]]; then
+        setCompress="1";
+    fi
 done;
 
 function dateString {
 
     if [[ $1 == "" ]]; then
-    dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |\
+        dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |\
         command sed -r "s~(\s)~_~g" |\
         command sed -r "s~(__)~_~g" );
-    echo "${dateStrng}";
+        echo "${dateStrng}";
     fi
 
     if [[ $1 == "hcode" ]]; then
-    dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |\
+        dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |\
         command sed -r "s~(\s)~_~g" |\
         command sed -r "s~(__)~_~g" );
-    hashCode=$(command date +'%N' |\
+        hashCode=$(command date +'%N' |\
         command md5sum |\
         command cut -b 1,2,5,7,8,9,12,15,19);
-    echo "${dateStrng}-${hashCode}";
+        echo "${dateStrng}-${hashCode}";
     fi
 }
 
@@ -130,10 +130,10 @@ if [[ ${OUTPUTDIR} != "" ]]; then
         echo "To create a new directory enter: no";
         echo -ne "Enter yes or no:";
         read -s outputDirDecision;
-        echo -ne "\n"; 
+        echo -ne "\n";
         if [[ "$outputDirDecision" == "yes" ]]; then
             rm -rf "${OUTPUTDIR}";
-        makeCustomOutputDir;
+            makeCustomOutputDir;
         fi
 
         if [[ "$outputDirDecision" == "no" ]]; then
@@ -145,7 +145,7 @@ fi
 if [[ "${OUTPUTDIR}" == "" ]]; then
     makeDfltOutputDir;
     thisRunTimeStamp=$(dateString);
-    echo "No output directory specified. Generating timestamped output directory."; 
+    echo "No output directory specified. Generating timestamped output directory.";
 
     for dot in {1..20}; do
         echo -ne ".";
