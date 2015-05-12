@@ -11,15 +11,15 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+#
+# General Information
+# ----------------------------------------------------------------
 # Name: TableTaker.sh
+# Version: v0.1
+# Author: Joe Hacobian
+# Usage: Run without parameters for usage info.
 # Description: Dump MySQL table data into separate SQL files for a specified database.
-# Usage: Run without args for usage info.
-# Author: @JoeHacobian
-# Notes:
-#  * Script will prompt for password for db access.
-#  * Output files are compressed and saved in the current working dir, unless DIR is
-#    specified on command-line.
+
 
 
 ### Disclaimer
