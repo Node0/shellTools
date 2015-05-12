@@ -2,6 +2,7 @@
 
 
 # Cronification variables
+# TODO Wrap this in a function and test for presence of the commands.
 date=$(which date);
 md5sum=$(which md5sum);
 cut=$(which cut);
