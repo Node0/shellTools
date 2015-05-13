@@ -42,8 +42,14 @@
 
 if [[ ${#} < 3 ]]
 then
-    echo "Usage: $(basename "$0") [--host=foo] [--user=bar or --user=none ] [--database=bat] [--outputdir=baz] [--compress or --nocompress]";
-    echo "Note: The output directory is optional, as is compression. Un-compressed SQL output is default behavior.";
+    echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
+    echo "-------------------------------------------------------------------------------------------------";
+    echo "Parameters with an asterisk are optional:";
+    echo "      Hostname: --host=localhost or --host=<IP ADDRESS> i.e. --host=xxx.xxx.xxx.xxx";
+    echo " Database User: --user=<MYSQL USERNAME> or Omit this param if no authentication is needed for CLI access to MySQL.";
+    echo "      Database: --database=<DATABASE NAME>";
+    echo "   *Output Dir: --outputdir=<DIRECTORY NAME> Directory will be created relative to the location of this script.";
+    echo "  *Compression: --compress Omit this param to forego compression of exported table SQL.";
     exit 1
 fi
 
