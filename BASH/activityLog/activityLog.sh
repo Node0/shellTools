@@ -82,16 +82,16 @@ actLogDir="activityLog"
 
 function dateString {
 
-if [[ $1 == "" ]]; then
-dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
-echo "${dateStrng}";
-fi
+    if [[ $1 == "" ]]; then
+        dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
+        echo "${dateStrng}";
+    fi
 
-if [[ $1 == "hcode" ]]; then
-dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
-hashCode=$(command date +'%N' |md5sum |cut -b 1,3,5,7,9);
-echo ""${dateStrng}"-"${hashCode}"";
-fi
+    if [[ $1 == "hcode" ]]; then
+        dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
+        hashCode=$(command date +'%N' |md5sum |cut -b 1,3,5,7,9);
+        echo ""${dateStrng}"-"${hashCode}"";
+    fi
 }
 
 
@@ -99,8 +99,8 @@ cd ~
 
 
 if [[ -f ~/.toprc ]];
-        then
-mv ~/.toprc ~/.backup_toprc
+then
+    mv ~/.toprc ~/.backup_toprc
 fi
 
 echo "RCfile for \"top with windows\"
@@ -119,7 +119,7 @@ Usr     fieldscur=ABDECGfhijlopqrstuvyzMKNWX
         summclr=3, msgsclr=3, headclr=2, taskclr=3" > ~/.toprc;
 
 function uptimeString {
-${uptime} |\
+    ${uptime} |\
 ${grep} -Pio "average\:(\s\d{1,}\.\d{1,}\,){1,}(\s\d{1,}\.\d{1,})" |\
 ${sed} -r "s~(average\:\s)~~g" |\
 ${sed} -r "s~\,~~g"|\
@@ -145,15 +145,15 @@ ${netstat} >> ~/${actLogDir}/${logFileName};
 echo -ne "\n\n\n\n\n" >> ~/${actLogDir}/${logFileName};
 
 if [[ "${1}" == "--and-mysql" ]];
-	then
-echo -ne "MySQL Queries Active at ${thisSlice}\n" >> ~/${actLogDir}/${logFileName};
+then
+    echo -ne "MySQL Queries Active at ${thisSlice}\n" >> ~/${actLogDir}/${logFileName};
 
-for i in {1..60}; do
-echo -ne "\n" >> ~/${actLogDir}/${logFileName};
-${mysql} --execute "show full processlist;" >> ~/${actLogDir}/${logFileName};
-echo -ne "\n\n" >> ~/${actLogDir}/${logFileName};
-${sleep} 0.25;
-done;
+    for i in {1..60}; do
+        echo -ne "\n" >> ~/${actLogDir}/${logFileName};
+        ${mysql} --execute "show full processlist;" >> ~/${actLogDir}/${logFileName};
+        echo -ne "\n\n" >> ~/${actLogDir}/${logFileName};
+        ${sleep} 0.25;
+    done;
 
 fi
 
