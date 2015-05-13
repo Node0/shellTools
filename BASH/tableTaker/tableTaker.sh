@@ -40,22 +40,6 @@
 ### terminate the execution or scheduled execution of this software; please also
 ### promptly uninstall, or remove this software from your computing infrastructure.
 
-if [[ ${#} < 3 ]]
-then
-    echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
-    echo "-------------------------------------------------------------------------------------------------";
-    echo "Parameters with an asterisk are optional:";
-    echo "      Hostname: --host=localhost or --host=<IP ADDRESS> i.e. --host=xxx.xxx.xxx.xxx";
-    echo " Database User: --user=<MYSQL USERNAME> or Omit this param if no authentication is needed for CLI access to MySQL.";
-    echo "      Database: --database=<DATABASE NAME>";
-    echo "   *Output Dir: --outputdir=<DIRECTORY NAME> Directory will be created relative to the location of this script.";
-    echo "  *Compression: --compress Omit this param to forego compression of exported table SQL.";
-    exit 1
-fi
-
-
-function processParams {
-
     #Shove all params into an array and loop through it to process them
     argv=("${@}");
     for param in "${argv[@]}";
@@ -75,9 +59,14 @@ function processParams {
         #Handle db user parameter
         setDbUser=$(echo "${param}" | command grep -Pic "\-\-user\=");
         if [[ "${setDbUser}" > 0 ]]; then
+            dbAuth="1";
             setDbUserString=$(echo "${param}" |command sed -r "s~(\-\-user\=)~~g");
             #TODO Handle edge cases where --user is given but empty i.e. --user=
             dbUser="${setDbUserString}";
+        fi
+
+        if [[ "${setDbUser}" == 0 ]]; then
+            dbAuth="0";
         fi
 
         #Handle db parameter
@@ -102,8 +91,26 @@ function processParams {
             setCompress="1";
         fi
     done;
-}
-processParams;
+
+    if [[ ${setHost} == "1" && ${setDb} == "1" ]]; then
+        showUsage="0";
+    else
+        showUsage="1";
+    fi
+
+    if [[ ${showUsage} == "1" ]]; then
+        echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
+        echo "-------------------------------------------------------------------------------------------------";
+        echo "Parameters with an asterisk are optional:";
+        echo "      Hostname: --host=localhost or --host=<IP ADDRESS> i.e. --host=xxx.xxx.xxx.xxx";
+        echo " Database User: --user=<MYSQL USERNAME> or Omit this param if no authentication is needed for CLI access to MySQL.";
+        echo "      Database: --database=<DATABASE NAME>";
+        echo "   *Output Dir: --outputdir=<DIRECTORY NAME> Directory will be created relative to the location of this script.";
+        echo "  *Compression: --compress Omit this param to forego compression of exported table SQL.";
+        exit 1
+    fi
+
+
 
 function dateString {
 
@@ -190,34 +197,71 @@ if [[ "${outputDir}" == "" ]]; then
     echo -ne "\n\n";
 fi
 
-echo "Please enter the password for the mysql user: ${dbUser}";
-echo "${dbUser}'s password: "
-read -s DB_pass;
+#If a user param was specified then ask for the password
+if [[ "${dbAuth}" == "1" ]]; then
+    echo "Please enter the password for the mysql user: ${dbUser}";
+    echo "${dbUser}'s password: "
+    read -s DB_pass;
+fi
+
+
 echo "Dumping tables into separate SQL command files for database '${DB}' into dir=${outputDir}"
 
 echo "Log of Table Taker activity as initiated on $(date +'%A %m-%d-%Y at %k%M hours')" |command tee "${outputDir}"_db_export_log.txt
 printf "\n\n\n" >> "${outputDir}"_db_export_log.txt
 
 #Get number of tables in Database for running log
-tablesInDB=$(mysql -NBA -h "${dbHost}" -u "${dbUser}" -p"${DB_pass}" -D "${DB}" -e 'show tables' |command grep -c .)
+if [[ "${dbAuth}" == "1" ]]; then
+    tablesInDB=$(mysql -NBA -h "${dbHost}" -u "${dbUser}" -p"${DB_pass}" -D "${DB}" --execute='show tables;' |command grep -c .);
+elif [[ "${dbAuth}" == "0" ]]; then
+    tablesInDB=$(mysql -NBA -h "${dbHost}" -D "${DB}" --execute='show tables;' |command grep -c .);
+fi
 
-tbl_count=0
 
-for currentTable in $(mysql -NBA -h "${dbHost}" -u "${dbUser}" -p"${DB_pass}" -D "${DB}" -e 'show tables')
-do
-    #Append current status into a log file for reference.
-    printf "DUMPING TABLE #:%u of %u, %-50s on %-20s \n" "$tbl_count" "$tablesInDB" "${currentTable}" "$(date +'%A %m-%d-%Y at %k%M hours')" >> "${outputDir}"_db_export_log.txt
+tbl_count=0;
 
-    #Display output to screen for monitoring.
-    printf "DUMPING TABLE #:%u of %u, %-50s on %-20s \n" "$tbl_count" "$tablesInDB" "${currentTable}" "$(date +'%A %m-%d-%Y at %k%M hours')"
+if [[ "${dbAuth}" == "1" ]]; then
 
-    #Export the table, and if specified, compress it.
-    if [ "${setCompress}" == "1" ]; then
-        mysqldump -h "${dbHost}" -u "${dbUser}" -p"${DB_pass}" "${DB}" "${currentTable}" |command gzip > "${outputDir}"/"${currentTable}".sql.gz
-    else
-        mysqldump -h "${dbHost}" -u "${dbUser}" -p"${DB_pass}" "${DB}" "${currentTable}" > "${outputDir}"/"${currentTable}".sql
-    fi
+    for currentTable in $(mysql -NBA -h "${dbHost}" -u "${dbUser}" -p"${DB_pass}" -D "${DB}" --execute='show tables;' );
+    do
+        #Append current status into a log file for reference.
+        printf "DUMPING TABLE #:%u of %u, %-50s on %-20s \n" "$tbl_count" "$tablesInDB" "${currentTable}" "$(date +'%A %m-%d-%Y at %k%M hours')" >> "${outputDir}"_db_export_log.txt
 
-    (( tbl_count++ ))
-done
+        #Display output to screen for monitoring.
+        printf "DUMPING TABLE #:%u of %u, %-50s on %-20s \n" "$tbl_count" "$tablesInDB" "${currentTable}" "$(date +'%A %m-%d-%Y at %k%M hours')"
+
+        #Export the table, and if specified, compress it.
+        if [ "${setCompress}" == "1" ]; then
+            mysqldump -h "${dbHost}" -u "${dbUser}" -p"${DB_pass}" "${DB}" "${currentTable}" |command gzip > "${outputDir}"/"${currentTable}".sql.gz
+        else
+            mysqldump -h "${dbHost}" -u "${dbUser}" -p"${DB_pass}" "${DB}" "${currentTable}" > "${outputDir}"/"${currentTable}".sql
+        fi
+
+        (( tbl_count++ ))
+    done
+
+elif [[ "${dbAuth}" == "0" ]]; then
+
+    for currentTable in $(mysql -NBA -h "${dbHost}" -D "${DB}" --execute='show tables;' );
+    do
+        #Append current status into a log file for reference.
+        printf "DUMPING TABLE #:%u of %u, %-50s on %-20s \n" "$tbl_count" "$tablesInDB" "${currentTable}" "$(date +'%A %m-%d-%Y at %k%M hours')" >> "${outputDir}"_db_export_log.txt
+
+        #Display output to screen for monitoring.
+        printf "DUMPING TABLE #:%u of %u, %-50s on %-20s \n" "$tbl_count" "$tablesInDB" "${currentTable}" "$(date +'%A %m-%d-%Y at %k%M hours')"
+
+        #Export the table, and if specified, compress it.
+        if [ "${setCompress}" == "1" ]; then
+            mysqldump -h "${dbHost}" "${DB}" "${currentTable}" |command gzip > "${outputDir}"/"${currentTable}".sql.gz
+        else
+            mysqldump -h "${dbHost}" "${DB}" "${currentTable}" > "${outputDir}"/"${currentTable}".sql
+        fi
+
+        (( tbl_count++ ))
+    done
+
+fi
+
+
+
 checkAndReport;
