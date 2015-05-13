@@ -15,7 +15,8 @@
 # General Information
 # ----------------------------------------------------------------
 # Name: activityLog.sh
-# Version: v0.01
+# Version: v0.1
+# Release: Development
 # Author: Joe Hacobian
 # Usage: Run without parameters for usage info.
 # Description: Creates a general 'timeslice' snapshot of activity
