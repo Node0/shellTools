@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-# Notice
+#Notice
 # ----------------------------------------------------------------
 # Copyright (C) 2015  Joe J Hacobian
 # This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
 # General Information
 # ----------------------------------------------------------------
 # Name: TableTaker.sh
-# Version: v0.1
+# Version: v0.2
 # Release: Development
 # Author: Joe Hacobian
 # Usage: Run without parameters for usage info.
@@ -27,7 +27,7 @@
 ### --------------------------------------------------------------
 ### This script and all accompanying configuration, directive, executable, and
 ### log files together with the directory structures, and other miscellanious files
-### necessary for the proper operation of the same hereinafter will be referred to 
+### necessary for the proper operation of the same hereinafter will be referred to
 ### as "the software".
 ### By acknowledging the presence of this software on your computing infrastructure
 ### and by not removing it or otherwise hindering its normal operation, you agree to
@@ -40,67 +40,73 @@
 ### terminate the execution or scheduled execution of this software; please also
 ### promptly uninstall, or remove this software from your computing infrastructure.
 
+
+function processParams {
     #Shove all params into an array and loop through it to process them
-    argv=("${@}");
-    for param in "${argv[@]}";
+    paramList=("${@}");
+    for param in "${paramList[@]}";
     do
 
-        # In general: Detect presence of parameter first i.e. ( $(echo ${param} | grep -Pic) > 0 )
+        # In general: Detect presence of parameter i.e. ( $(echo ${param} | grep -Pic) > 0 )
         # then handle the particulars using sed for access if the param is a key:value pair.
 
         #Handle db host parameter
-        setHost=$(echo "${param}" | command grep -Pic "\-\-host\=");
-        if [[ "${setHost}" > 0 ]]; then
-            setHostString=$(echo "${param}" |command sed -r "s~(\-\-host\=)~~g");
+        if [[ "$(echo "${param}" | command grep -Pc "\-\-[hH][oO][sS][tT]\=")" > 0 ]]; then
+            setHostString=$(echo "${param}" |command sed -r "s~(\-\-[hH][oO][sS][tT]\=)~~g");
             #TODO Handle edge cases where --host is given but empty i.e. --host=
             dbHost="${setHostString}";
         fi
 
         #Handle db user parameter
-        setDbUser=$(echo "${param}" | command grep -Pic "\-\-user\=");
-        if [[ "${setDbUser}" > 0 ]]; then
+        if [[ "$(echo "${param}" | command grep -Pc "\-\-[uU][sS][eE][rR]\=")" > 0 ]]; then
             dbAuth="1";
-            setDbUserString=$(echo "${param}" |command sed -r "s~(\-\-user\=)~~g");
+            setDbUserString=$(echo "${param}" |command sed -r "s~(\-\-[uU][sS][eE][rR]\=)~~g");
             #TODO Handle edge cases where --user is given but empty i.e. --user=
             dbUser="${setDbUserString}";
         fi
 
-        if [[ "${setDbUser}" == 0 ]]; then
+        if [[ "${dbUser}" == "" ]]; then
             dbAuth="0";
         fi
 
         #Handle db parameter
-        setDb=$(echo "${param}" | command grep -Pic "\-\-database\=");
-        if [[ "${setDb}" > 0 ]]; then
-            setDbString=$(echo "${param}" |command sed -r "s~(\-\-database\=)~~g");
+        if [[ "$(echo "${param}" | command grep -Pc "\-\-[dD][aA][tT][aA][bB][aA][sS][eE]\=")" > 0 ]]; then
+            setDbString=$(echo "${param}" |command sed -r "s~(\-\-[dD][aA][tT][aA][bB][aA][sS][eE]\=)~~g");
             #TODO Handle edge cases where --database is given but empty i.e. --database=
             DB="${setDbString}";
         fi
 
         #Handle output directory parameter
-        setOutputDir=$(echo "${param}" | command grep -Pic "\-\-outputdir\=");
-        if [[ "${setOutputDir}" > 0 ]]; then
-            outputDirString=$(echo "${param}" |command sed -r "s~(\-\-outputdir\=)~~g");
+        if [[ "$(echo "${param}" | command grep -Pc "\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=")" > 0 ]]; then
+            outputDirString=$(echo "${param}" |command sed -r "s~(\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=)~~g");
             #TODO Handle edge cases where --outputdir is given but empty i.e. --outputdir=
             outputDir="${outputDirString}";
         fi
 
         #Handle compression parameter
-        setCmpressTest=$(echo "${param}" | command grep -Pic "\-\-compress");
-        if [[ "${setCmpressTest}" > 0 ]]; then
+        if [[ "$(echo "${param}" | command grep -Pic "\-\-[cC][oO][mM][pP][rR][eE][sS][sS]")" > 0 ]]; then
             setCompress="1";
+        else
+            setCompress="0";
         fi
     done;
 
-    if [[ ${setHost} == "1" && ${setDb} == "1" ]]; then
+# Some useful debugging information
+# echo "dbHost: ${dbHost}";
+# echo "DB: ${DB}";
+# echo "dbAuth: ${dbAuth}";
+# echo "dbUser: ${dbUser}";
+# echo "outputDir: ${outputDir}";
+# echo "Compression: ${setCompress}";
+
+    if [[ "${dbHost}" != "" && "${DB}" != "" ]]; then
         showUsage="0";
     else
         showUsage="1";
     fi
-
     if [[ ${showUsage} == "1" ]]; then
         echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
-        echo "-------------------------------------------------------------------------------------------------";
+        echo "----------------------------------------------------------------";
         echo "Parameters with an asterisk are optional:";
         echo "      Hostname: --host=localhost or --host=<IP ADDRESS> i.e. --host=xxx.xxx.xxx.xxx";
         echo " Database User: --user=<MYSQL USERNAME> or Omit this param if no authentication is needed for CLI access to MySQL.";
@@ -109,19 +115,21 @@
         echo "  *Compression: --compress Omit this param to forego compression of exported table SQL.";
         exit 1
     fi
+}
+processParams "${@}";
 
 
 
 function dateString {
 
-    if [[ $1 == "" ]]; then
+    if [[ "${1}" == "" ]]; then
         dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |\
         command sed -r "s~(\s)~_~g" |\
         command sed -r "s~(__)~_~g" );
         echo "${dateStrng}";
     fi
 
-    if [[ $1 == "hcode" ]]; then
+    if [[ "${1}" == "hcode" ]]; then
         dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |\
         command sed -r "s~(\s)~_~g" |\
         command sed -r "s~(__)~_~g" );
@@ -152,9 +160,11 @@ function checkAndReport {
         rm -rf "${outputDir}";
         rm -f "${outputDir}"_db_export_log.txt;
     else
-        echo -ne "\n\n\n";
-        echo "EXPORT COMPLETE.";
-        echo "${tbl_count} tables dumped from database ${DB} into dir=${outputDir}";
+        echo -ne "\n";
+        echo -ne "EXPORT COMPLETE.\n\n\n";
+        echo "Export Summary";
+        echo "----------------------------------------------------------------"
+        echo -ne "${tbl_count} tables dumped from database: ${DB}\nOutput directory: ${outputDir}\n\n\n";
     fi
 }
 
@@ -248,7 +258,7 @@ elif [[ "${dbAuth}" == "0" ]]; then
         printf "DUMPING TABLE #:%u of %u, %-50s on %-20s \n" "$tbl_count" "$tablesInDB" "${currentTable}" "$(date +'%A %m-%d-%Y at %k%M hours')" >> "${outputDir}"_db_export_log.txt
 
         #Display output to screen for monitoring.
-        printf "DUMPING TABLE #:%u of %u, %-50s on %-20s \n" "$tbl_count" "$tablesInDB" "${currentTable}" "$(date +'%A %m-%d-%Y at %k%M hours')"
+        printf "DUMPING TABLE #:%u of %u, %-50s on %-20s \n" "$tbl_count" "$tablesInDB" "${currentTable}" "$(date +'%A %m-%d-%Y at %k%M hours')";
 
         #Export the table, and if specified, compress it.
         if [ "${setCompress}" == "1" ]; then
@@ -261,7 +271,4 @@ elif [[ "${dbAuth}" == "0" ]]; then
     done
 
 fi
-
-
-
 checkAndReport;
