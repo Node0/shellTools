@@ -76,6 +76,7 @@ function processParams {
                 dbUser="${setDbUserString}";
             fi
         else
+        #TODO This else is ALWAYS executed, which is breaking non-authenticated export ability, fix this asap.
         dbAuth="0";
         fi
 
