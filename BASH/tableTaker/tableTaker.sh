@@ -42,6 +42,12 @@
 
 
 function processParams {
+
+
+    # Parameter Regexes
+    hostParam="\-\-[hH][oO][sS][tT]\=";
+    userParam="\-\-[uU][sS][eE][rR]\=";
+    ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
     #Shove all params into an array and loop through it to process them
     paramList=("${@}");
     for param in "${paramList[@]}";
@@ -51,40 +57,44 @@ function processParams {
         # then handle the particulars using sed for access if the param is a key:value pair.
 
         #Handle db host parameter
-        if [[ "$(echo "${param}" | command grep -Pc "\-\-[hH][oO][sS][tT]\=")" > 0 ]]; then
-            setHostString=$(echo "${param}" |command sed -r "s~(\-\-[hH][oO][sS][tT]\=)~~g");
-            #TODO Handle edge cases where --host is given but empty i.e. --host=
-            dbHost="${setHostString}";
+        if [[ "$(echo "${param}" |command grep -Po '('${hostParam}')' )" != "" ]]; then
+            if [[ "$(echo "${param}" |command sed -r "s~(${hostParam})~~g")" != "localhost" ]]; then
+                if [[ "$(echo "${param}" |command grep -Po '('${ipAddrRgx}')')" != "" ]]; then
+                setHostString=$(echo "${param}" |command grep -Po '('${ipAddrRgx}')');
+                fi
+            else
+            setHostString=$(echo "${param}" |command sed -r "s~(${hostParam})~~g");
+            fi
+        dbHost="${setHostString}";
         fi
 
         #Handle db user parameter
-        if [[ "$(echo "${param}" | command grep -Pc "\-\-[uU][sS][eE][rR]\=")" > 0 ]]; then
-            dbAuth="1";
-            setDbUserString=$(echo "${param}" |command sed -r "s~(\-\-[uU][sS][eE][rR]\=)~~g");
-            #TODO Handle edge cases where --user is given but empty i.e. --user=
-            dbUser="${setDbUserString}";
-        fi
-
-        if [[ "${dbUser}" == "" ]]; then
-            dbAuth="0";
+        if [[ "$(echo "${param}" |command grep -Po '('${userParam}')' )" != "" ]]; then
+            if [[ "$(echo "${param}" |command sed -r "s~(${userParam})~~g" )" != "" ]]; then
+                dbAuth="1";
+                setDbUserString=$(echo "${param}" |command sed -r "s~(${userParam})~~g");
+                dbUser="${setDbUserString}";
+            fi
+        else
+        dbAuth="0";
         fi
 
         #Handle db parameter
-        if [[ "$(echo "${param}" | command grep -Pc "\-\-[dD][aA][tT][aA][bB][aA][sS][eE]\=")" > 0 ]]; then
+        if [[ "$(echo "${param}" |command grep -Po "\-\-[dD][aA][tT][aA][bB][aA][sS][eE]\=")" != "" ]]; then
             setDbString=$(echo "${param}" |command sed -r "s~(\-\-[dD][aA][tT][aA][bB][aA][sS][eE]\=)~~g");
             #TODO Handle edge cases where --database is given but empty i.e. --database=
             DB="${setDbString}";
         fi
 
         #Handle output directory parameter
-        if [[ "$(echo "${param}" | command grep -Pc "\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=")" > 0 ]]; then
+        if [[ "$(echo "${param}" |command grep -Pc "\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=")" > 0 ]]; then
             outputDirString=$(echo "${param}" |command sed -r "s~(\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=)~~g");
             #TODO Handle edge cases where --outputdir is given but empty i.e. --outputdir=
             outputDir="${outputDirString}";
         fi
 
         #Handle compression parameter
-        if [[ "$(echo "${param}" | command grep -Pic "\-\-[cC][oO][mM][pP][rR][eE][sS][sS]")" > 0 ]]; then
+        if [[ "$(echo "${param}" |command grep -Pic "\-\-[cC][oO][mM][pP][rR][eE][sS][sS]")" > 0 ]]; then
             setCompress="1";
         else
             setCompress="0";
@@ -167,6 +177,11 @@ function checkAndReport {
         echo -ne "${tbl_count} tables dumped from database: ${DB}\nOutput directory: ${outputDir}\n\n\n";
     fi
 }
+
+
+
+
+
 
 if [[ ${outputDir} != "" ]]; then
 
