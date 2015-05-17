@@ -75,9 +75,14 @@ function processParams {
                 setDbUserString=$(echo "${param}" |command sed -r "s~(${userParam})~~g");
                 dbUser="${setDbUserString}";
             fi
-        else
-        #TODO This else is ALWAYS executed, which is breaking non-authenticated export ability, fix this asap.
-        dbAuth="0";
+        fi
+
+        # Temporarily added to correct authentication discernment bug.
+        # db user parameter handling should be properly refactored to
+        # detect (and gracefully handle) the absense of a value if the
+        # --user parameter is present
+        if [[ "${dbUser}" == "" ]]; then
+            dbAuth="0";
         fi
 
         #Handle db parameter
