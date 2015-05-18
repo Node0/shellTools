@@ -57,7 +57,7 @@
 
 
 # Cronification variables
-# TODO Wrap this in a function and test for presence of the commands.
+# Todo: Wrap this in a function and test for presence of the commands.
 date=$(which date);
 md5sum=$(which md5sum);
 cut=$(which cut);
@@ -75,6 +75,10 @@ tar=$(which tar);
 rm=$(which rm);
 
 # Log Directory
+# Todo: Re-think this to handle both automatic (cron-triggered) mode
+# as well as an interactively called (by the user) mode. When run interactively
+# by the user, activityLog should place the log file in the same directory
+# the script itself.
 actLogDir="activityLog"
 
 
@@ -99,6 +103,7 @@ function dateString {
 cd ~
 
 
+# Todo: Complete the task this started by restoring found .toprc files (if any) after activityLog completes its run.
 if [[ -f ~/.toprc ]];
 then
     mv ~/.toprc ~/.backup_toprc
@@ -131,6 +136,7 @@ uptimeLabel=$(uptimeString);
 thisSlice=$(dateString);
 logFileName="load_of__${uptimeLabel}__at_${thisSlice}.log"
 
+# Todo: All of this needs to be cleaned up and wrapped into discrete funtions.
 ${touch} ~/${actLogDir}/${logFileName};
 ${top} -b -M -H -n1 >>  ~/${actLogDir}/${logFileName};
 echo -ne "\n\n\n\n\n\n\n" >> ~/${actLogDir}/${logFileName};
@@ -145,6 +151,7 @@ ${netstat} >> ~/${actLogDir}/${logFileName};
 
 echo -ne "\n\n\n\n\n" >> ~/${actLogDir}/${logFileName};
 
+# Todo: MySQL access needs to be more systematically tested and lack of access handled gracefully.
 if [[ "${1}" == "--and-mysql" ]];
 then
     echo -ne "MySQL Queries Active at ${thisSlice}\n" >> ~/${actLogDir}/${logFileName};
@@ -158,5 +165,7 @@ then
 
 fi
 
+# Todo: The '--transform' parameter is not portable across linux distributions (recently issues with RedHat to Debian compatibility)
+# Look more carefully into this.
 ${tar} --transform 's/.*\///g' -czf ~/${actLogDir}/${logFileName}.tar.gz ~/${actLogDir}/${logFileName};
 ${rm} -f ~/${actLogDir}/${logFileName};
