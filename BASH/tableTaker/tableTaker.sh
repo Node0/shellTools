@@ -80,10 +80,7 @@ function processParams {
             fi
         fi
 
-        # Temporarily added to correct authentication discernment bug.
-        # db user parameter handling should be properly refactored to
-        # detect (and gracefully handle) the absense of a value if the
-        # --user parameter is present
+        # Todo: Look into making this more elegant (integrate with db user param handling logic above)
         if [[ "${dbUser}" == "" ]]; then
             dbAuth="0";
         fi
