@@ -49,6 +49,7 @@ function processParams {
     userParam="\-\-[uU][sS][eE][rR]\=";
     dbParam="\-\-[dD][aA][tT][aA][bB][aA][sS][eE]\=";
     outputDirParam="\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=";
+    compressionParam="\-\-[cC][oO][mM][pP][rR][eE][sS][sS]";
     ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
     #Shove all params into an array and loop through it to process them
     paramList=("${@}");
@@ -104,7 +105,7 @@ function processParams {
 
 
         #Handle compression parameter
-        if [[ "$(echo "${param}" |command grep -Po "\-\-[cC][oO][mM][pP][rR][eE][sS][sS]")" != "" ]]; then
+        if [[ "$(echo "${param}" |command grep -Po '('${compressionParam}')')" != "" ]]; then
             setCompress="1";
         else
             setCompress="0";
