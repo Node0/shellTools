@@ -89,20 +89,22 @@ function processParams {
 
         #Handle db parameter
         if [[ "$(echo "${param}" |command grep -Po '('${dbParam}')' )" != "" ]]; then
-            setDbString=$(echo "${param}" |command sed -r "s~(${dbParam})~~g");
-            #TODO Handle edge cases where --database is given but empty i.e. --database=
-            DB="${setDbString}";
+            if [[ "$(echo "${param}" |command sed -r "s~(${dbParam})~~g" )" != "" ]]; then
+                setDbString=$(echo "${param}" |command sed -r "s~(${dbParam})~~g");
+                DB="${setDbString}";
+            fi
         fi
 
         #Handle output directory parameter
-        if [[ "$(echo "${param}" |command grep -Po '('${outputDirParam}')')" != 0 ]]; then
+        if [[ "$(echo "${param}" |command grep -Po '('${outputDirParam}')')" != "" ]]; then
             outputDirString=$(echo "${param}" |command sed -r "s~(${outputDirParam})~~g");
             #TODO Handle edge cases where --outputdir is given but empty i.e. --outputdir=
             outputDir="${outputDirString}";
         fi
 
+
         #Handle compression parameter
-        if [[ "$(echo "${param}" |command grep -Pic "\-\-[cC][oO][mM][pP][rR][eE][sS][sS]")" > 0 ]]; then
+        if [[ "$(echo "${param}" |command grep -Po "\-\-[cC][oO][mM][pP][rR][eE][sS][sS]")" != "" ]]; then
             setCompress="1";
         else
             setCompress="0";
