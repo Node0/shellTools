@@ -98,11 +98,11 @@ function processParams {
 
         #Handle output directory parameter
         if [[ "$(echo "${param}" |command grep -Po '('${outputDirParam}')')" != "" ]]; then
+            if [[ "$(echo "${param}" |command sed -r "s~(${outputDirParam})~~g" )" != "" ]]; then
             outputDirString=$(echo "${param}" |command sed -r "s~(${outputDirParam})~~g");
-            #TODO Handle edge cases where --outputdir is given but empty i.e. --outputdir=
             outputDir="${outputDirString}";
+            fi
         fi
-
 
         #Handle compression parameter
         if [[ "$(echo "${param}" |command grep -Po '('${compressionParam}')')" != "" ]]; then
