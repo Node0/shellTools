@@ -48,6 +48,7 @@ function processParams {
     hostParam="\-\-[hH][oO][sS][tT]\=";
     userParam="\-\-[uU][sS][eE][rR]\=";
     dbParam="\-\-[dD][aA][tT][aA][bB][aA][sS][eE]\=";
+    outputDirParam="\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=";
     ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
     #Shove all params into an array and loop through it to process them
     paramList=("${@}");
@@ -94,8 +95,8 @@ function processParams {
         fi
 
         #Handle output directory parameter
-        if [[ "$(echo "${param}" |command grep -Pc "\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=")" > 0 ]]; then
-            outputDirString=$(echo "${param}" |command sed -r "s~(\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=)~~g");
+        if [[ "$(echo "${param}" |command grep -Po '('${outputDirParam}')')" != 0 ]]; then
+            outputDirString=$(echo "${param}" |command sed -r "s~(${outputDirParam})~~g");
             #TODO Handle edge cases where --outputdir is given but empty i.e. --outputdir=
             outputDir="${outputDirString}";
         fi
