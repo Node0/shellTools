@@ -45,13 +45,19 @@ function processParams {
 
 
     # Parameter Regexes
+    # Note: Regexes structured with regard for parameter-case
+    # in order to ensure smooth interchangability between grep and sed
+    # without regard to version (of sed) or system. Per-tool case
+    # sensitivity flags 'may' have otherwise resulted in more brittle code.
+
     hostParam="\-\-[hH][oO][sS][tT]\=";
     userParam="\-\-[uU][sS][eE][rR]\=";
     dbParam="\-\-[dD][aA][tT][aA][bB][aA][sS][eE]\=";
     outputDirParam="\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=";
     compressionParam="\-\-[cC][oO][mM][pP][rR][eE][sS][sS]";
     ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
-    #Shove all params into an array and loop through it to process them
+
+    # Out of order parameter processing loop (script may be invoked with params given in any order)
     paramList=("${@}");
     for param in "${paramList[@]}";
     do
@@ -158,6 +164,7 @@ function dateString {
     fi
 }
 
+# Output directory functions
 function makeDfltOutputDir {
     thisRunTimeStamp=$(dateString);
     outputDir="${DB}_Exported_on_${thisRunTimeStamp}";
@@ -168,7 +175,9 @@ function makeCustomOutputDir {
     mkdir "${outputDir}";
 }
 
-
+# Run this after everything else is done, if a trainwreck occurred then clean up (wipe out)
+# the output directory for said trainwreck. This will more than likely be improved upon in
+# future releases.
 function checkAndReport {
     chkOutputDir=$(command ls ${outputDir} |command grep -Pic ".");
     if [[ ${chkOutputDir} == 0 ]]; then
@@ -186,11 +195,7 @@ function checkAndReport {
     fi
 }
 
-
-
-
-
-
+# Output directory sanity checking.
 if [[ ${outputDir} != "" ]]; then
 
     if [[ ! -d ${outputDir} ]]; then
@@ -230,7 +235,7 @@ if [[ "${outputDir}" == "" ]]; then
     echo -ne "\n\n";
 fi
 
-#If a user param was specified then ask for the password
+# If a user param was specified then ask for the password
 if [[ "${dbAuth}" == "1" ]]; then
     echo "Please enter the password for the mysql user: ${dbUser}";
     echo "${dbUser}'s password: "
@@ -238,12 +243,12 @@ if [[ "${dbAuth}" == "1" ]]; then
 fi
 
 
-echo "Dumping tables into separate SQL command files for database '${DB}' into dir=${outputDir}"
+echo "Dumping tables into separate SQL files for database '${DB}' in output directory: ${outputDir}"
 
 echo "Log of Table Taker activity as initiated on $(date +'%A %m-%d-%Y at %k%M hours')" |command tee "${outputDir}"_db_export_log.txt
 printf "\n\n\n" >> "${outputDir}"_db_export_log.txt
 
-#Get number of tables in Database for running log
+# Get number of tables in Database for running log
 if [[ "${dbAuth}" == "1" ]]; then
     tablesInDB=$(mysql -NBA -h "${dbHost}" -u "${dbUser}" -p"${DB_pass}" -D "${DB}" --execute='show tables;' |command grep -c .);
 elif [[ "${dbAuth}" == "0" ]]; then
@@ -252,6 +257,9 @@ fi
 
 
 tbl_count=0;
+
+# Run different loops (only 1 should ever run at a time) based on whether
+# MySQL is accessed with auth credentials or not.
 
 if [[ "${dbAuth}" == "1" ]]; then
 
