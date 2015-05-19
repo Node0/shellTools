@@ -183,7 +183,7 @@ function checkAndReport {
     if [[ ${chkOutputDir} == 0 ]]; then
         echo -ne "\n\n\n";
         echo "ATTENTION!! Something went wrong with the export, ${chkOutputDir} tables were exported.";
-        echo "Please check your database access credentials and try again.";
+        echo "Please check your hostname, database name, access credentials, and try again.";
         rm -rf "${outputDir}";
         rm -f "${outputDir}"_db_export_log.txt;
     else
