@@ -1,7 +1,7 @@
 #Shell Tools script collection
 
-###An assortment of generally useful shell i.e.  
-###(BASH, SH, CSH & other language) scripts for use on the command line.
+####An assortment of generally useful shell i.e. (BASH, SH, CSH & other language)  
+####scripts for use on the command line.
 
 ###The scripts comprising shellTools are created with an emphasis on:  
 #### - code quality (reliable operation in diverse environments)  
