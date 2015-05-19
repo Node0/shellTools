@@ -8,7 +8,7 @@
 #### - comfort in usage (gentle learning curves with sensible default behaviors)  
 
 ##_shellTools includes:_
-* __tableTaker__
+* __tableTaker__  
 > A robust table-by-table data export script for MySQL.  
 > featuring __timestamped database output directories__ (by default)  
 > with support for __user specified output directory names.__  
