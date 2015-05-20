@@ -128,6 +128,15 @@ function processParams {
     else
         showUsage="1";
     fi
+    # Todo: If usage the usage information display is called
+    # attempt to connect to the database without a specified
+    # username & password. Attempt to show all databases.
+    # If successfully able to get the db list, display that output
+    # underneath the usage parameter display.
+    # If un-successfull display a note to the user that un-authenticated
+    # access to MySQL is not available and that they'll need either authentication
+    # credentials for a root-level privileged database user or authentication
+    # credentials for a user account with full access the database they wish to export.
     if [[ ${showUsage} == "1" ]]; then
         echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
         echo "----------------------------------------------------------------";
@@ -176,8 +185,9 @@ function makeCustomOutputDir {
 }
 
 # Run this after everything else is done, if a trainwreck occurred then clean up (wipe out)
-# the output directory for said trainwreck. This will more than likely be improved upon in
-# future releases.
+# the output directory for said trainwreck.
+# Todo: Ask user (with a default fallback behavior) whether to wipe out the failed export directory
+# or leave it in place.
 function checkAndReport {
     chkOutputDir=$(command ls ${outputDir} |command grep -Pic ".");
     if [[ ${chkOutputDir} == 0 ]]; then
