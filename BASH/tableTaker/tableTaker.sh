@@ -41,6 +41,42 @@
 ### promptly uninstall, or remove this software from your computing infrastructure.
 
 
+function showUsage {
+
+echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
+echo "----------------------------------------------------------------";
+echo "Parameters with an asterisk are optional:";
+echo "      Hostname: --host=localhost or --host=<IP ADDRESS> i.e. --host=xxx.xxx.xxx.xxx";
+echo " Database User: --user=<MYSQL USERNAME> or Omit this param if no authentication is needed for CLI access to MySQL.";
+echo "      Database: --database=<DATABASE NAME>";
+echo "   *Output Dir: --outputdir=<DIRECTORY NAME> Directory will be created relative to the location of this script.";
+echo "  *Compression: --compress Omit this param to forego compression of exported table SQL.";
+echo "----------------------------------------------------------------";
+echo -ne "\n";
+
+#This whole database-list-preview adventure needs some serious clean-up and refactoring to be more robust.
+previewUserList=( "admin" "mysql" "root" );
+simplePrvwOutput=$(mysql --execute="show databases;");
+if [[ $(echo ${simplePrvwOutput} | grep -P "(information_schema)" ) != "" ]]; then
+    echo     "Note: Your MySQL configuration allows direct access to the database server.";
+    echo -ne "      Here is a list of all databases available without explicit authentication.\n\n";
+    mysql --execute="show databases;"
+else
+#If access to MySQL without a user fails, try some common usernames without specifying a password.
+    for userName in "${previewUserList[@]}";
+    do
+    probedPrvwOutput=$(mysql --user=${userName} --password="." --execute="show databases;");
+    if [[ $(echo ${probedPrvwOutput} | grep -P "(information_schema)" ) != "" ]]; then
+        echo     "Note: Your MySQL configuration allows the user: ${userName} to access the";
+        echo     "      database server without a password. Here is a list of all databases";
+        echo -ne "      available to the user: ${userName} without a password.\n\n";
+        mysql --user=${userName} --execute="show databases;";
+    fi
+done;
+fi
+exit 1
+}
+
 function processParams {
 
 
@@ -124,29 +160,9 @@ function processParams {
     # echo "Compression: ${setCompress}";
 
     if [[ "${dbHost}" != "" && "${DB}" != "" ]]; then
-        showUsage="0";
+        true;
     else
-        showUsage="1";
-    fi
-    # Todo: If usage the usage information display is called
-    # attempt to connect to the database without a specified
-    # username & password. Attempt to show all databases.
-    # If successfully able to get the db list, display that output
-    # underneath the usage parameter display.
-    # If un-successfull display a note to the user that un-authenticated
-    # access to MySQL is not available and that they'll need either authentication
-    # credentials for a root-level privileged database user or authentication
-    # credentials for a user account with full access the database they wish to export.
-    if [[ ${showUsage} == "1" ]]; then
-        echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
-        echo "----------------------------------------------------------------";
-        echo "Parameters with an asterisk are optional:";
-        echo "      Hostname: --host=localhost or --host=<IP ADDRESS> i.e. --host=xxx.xxx.xxx.xxx";
-        echo " Database User: --user=<MYSQL USERNAME> or Omit this param if no authentication is needed for CLI access to MySQL.";
-        echo "      Database: --database=<DATABASE NAME>";
-        echo "   *Output Dir: --outputdir=<DIRECTORY NAME> Directory will be created relative to the location of this script.";
-        echo "  *Compression: --compress Omit this param to forego compression of exported table SQL.";
-        exit 1
+        showUsage;
     fi
 }
 processParams "${@}";
