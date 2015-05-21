@@ -43,6 +43,7 @@
 
 function showUsage {
 
+clear;
 echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
 echo "----------------------------------------------------------------";
 echo "Parameters with an asterisk are optional:";
@@ -72,7 +73,8 @@ else
         echo -ne "      available to the user: ${userName} without a password.\n\n";
         mysql --user=${userName} --execute="show databases;";
     fi
-done;
+    done;
+    echo -ne "\n\n";
 fi
 exit 1
 }
