@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#Notice
+# Notice
 # ----------------------------------------------------------------
 # Copyright (C) 2015  Joe J Hacobian
 # This program is free software: you can redistribute it and/or modify
@@ -43,40 +43,56 @@
 
 function showUsage {
 
-clear;
-echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
-echo "----------------------------------------------------------------";
-echo "Parameters with an asterisk are optional:";
-echo "      Hostname: --host=localhost or --host=<IP ADDRESS> i.e. --host=xxx.xxx.xxx.xxx";
-echo " Database User: --user=<MYSQL USERNAME> or Omit this param if no authentication is needed for CLI access to MySQL.";
-echo "      Database: --database=<DATABASE NAME>";
-echo "   *Output Dir: --outputdir=<DIRECTORY NAME> Directory will be created relative to the location of this script.";
-echo "  *Compression: --compress Omit this param to forego compression of exported table SQL.";
-echo "----------------------------------------------------------------";
-echo -ne "\n";
+    clear;
+    echo "Usage: $(basename "$0") [--host=foo] [--user=bar] [--database=bat] [--outputdir=baz] [--compress]";
+    echo "----------------------------------------------------------------";
+    echo "Parameters with an asterisk are optional:";
+    echo "      Hostname: --host=localhost or --host=<IP ADDRESS> i.e. --host=xxx.xxx.xxx.xxx";
+    echo " Database User: --user=<MYSQL USERNAME> or Omit this param if no authentication is needed for CLI access to MySQL.";
+    echo "      Database: --database=<DATABASE NAME>";
+    echo "   *Output Dir: --outputdir=<DIRECTORY NAME> Directory will be created relative to the location of this script.";
+    echo "  *Compression: --compress Omit this param to forego compression of exported table SQL.";
+    echo "----------------------------------------------------------------";
+    echo -ne "\n";
 
-#This whole database-list-preview adventure needs some serious clean-up and refactoring to be more robust.
-previewUserList=( "admin" "mysql" "root" );
-simplePrvwOutput=$(mysql --execute="show databases;" 2>&1);
-if [[ $(echo ${simplePrvwOutput} | grep -P "(information_schema)" ) != "" ]]; then
-    echo     "Note: Your MySQL configuration allows direct access to the database server.";
-    echo -ne "      Here is a list of all databases available without explicit authentication.\n\n";
-    mysql --execute="show databases;"
-else
-#If access to MySQL without a user fails, try some common usernames without specifying a password.
-    for userName in "${previewUserList[@]}";
-    do
-    probedPrvwOutput=$(mysql --user=${userName} --password="." --execute="show databases;" 2>&1 );
-    if [[ $(echo ${probedPrvwOutput} | grep -P "(information_schema)" ) != "" ]]; then
-        echo     "Note: Your MySQL configuration allows the user: ${userName} to access the";
-        echo     "      database server without a password. Here is a list of all databases";
-        echo -ne "      available to the user: ${userName} without a password.\n\n";
-        mysql --user=${userName} --execute="show databases;";
+    #This whole database-list-preview adventure needs some serious clean-up and refactoring to be more robust.
+    previewUserList=( "admin" "mysql" "root" );
+    simplePrvwOutput=$(mysql --execute="show databases;" 2>&1);
+    if [[ $(echo ${simplePrvwOutput} | grep -P "(information_schema)" ) != "" ]]; then
+        echo     "Note: Your MySQL configuration allows direct access to the database server.";
+        echo -ne "      Here is a list of all databases available without explicit authentication.\n\n";
+        mysql --execute="show databases;"
+    else
+        #If access to MySQL without a user fails, try some common usernames without specifying a password.
+        for userName in "${previewUserList[@]}";
+        do
+            probedPrvwOutput=$(mysql --user=${userName} --execute="show databases;" 2>&1 );
+            if [[ $(echo ${probedPrvwOutput} | grep -P "(information_schema)" ) != "" ]]; then
+                echo     "Note: Your MySQL configuration allows the user: ${userName} to access the";
+                echo     "      database server without a password. Here is a list of all databases";
+                echo -ne "      available to the user: ${userName} without a password.\n\n";
+                mysql --user=${userName} --execute="show databases;";
+                setNoPreview=0;
+            else
+                setNoPreview=1;
+            fi
+        done;
+        if [[ "${setNoPreview}" == 1 ]]; then
+            echo     "Note: It appears as though your MySQL server is not configured to allow open CLI";
+            echo     "      access. This means access to MySQL is not readily available, that is to say";
+            echo     "      access without a username, or access with one of the common usernames such as";
+            echo -ne "      [mysql, root, admin] without the specification of a password, is not available.\n\n";
+
+            echo     "      Next Steps:";
+            echo     "      ----------------------------------------------------------------";
+            echo     "      To proceed further you'll need working MySQL login credentials.";
+            echo     "      This means either a valid username with a blank password or a valid";
+            echo     "      username and password pair with privileges to access the database(s)";
+            echo     "      you wish to export.";
+        fi
+        echo -ne "\n\n";
     fi
-    done;
-    echo -ne "\n\n";
-fi
-exit 1
+    exit 1
 }
 
 function processParams {
@@ -140,8 +156,8 @@ function processParams {
         #Handle output directory parameter
         if [[ "$(echo "${param}" |command grep -Po '('${outputDirParam}')')" != "" ]]; then
             if [[ "$(echo "${param}" |command sed -r "s~(${outputDirParam})~~g" )" != "" ]]; then
-            outputDirString=$(echo "${param}" |command sed -r "s~(${outputDirParam})~~g");
-            outputDir="${outputDirString}";
+                outputDirString=$(echo "${param}" |command sed -r "s~(${outputDirParam})~~g");
+                outputDir="${outputDirString}";
             fi
         fi
 
