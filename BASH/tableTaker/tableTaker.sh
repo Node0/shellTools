@@ -14,7 +14,7 @@
 #
 # General Information
 # ----------------------------------------------------------------
-# Name: TableTaker.sh
+# Name: tableTaker.sh
 # Version: v0.2
 # Release: Development
 # Author: Joe Hacobian
