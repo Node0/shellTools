@@ -16,7 +16,7 @@
 # ----------------------------------------------------------------
 # Name: tableTaker.sh
 # Version: v0.2
-# Release: Development
+# Release: Stable
 # Author: Joe Hacobian
 # Usage: Run without parameters for usage info.
 # Description: Dump MySQL table data into separate SQL files for a specified database.
