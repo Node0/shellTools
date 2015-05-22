@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/bin/bash
 
 #Notice
 # ----------------------------------------------------------------
@@ -57,7 +57,7 @@ echo -ne "\n";
 
 #This whole database-list-preview adventure needs some serious clean-up and refactoring to be more robust.
 previewUserList=( "admin" "mysql" "root" );
-simplePrvwOutput=$(mysql --execute="show databases;");
+simplePrvwOutput=$(mysql --execute="show databases;" 2>&1);
 if [[ $(echo ${simplePrvwOutput} | grep -P "(information_schema)" ) != "" ]]; then
     echo     "Note: Your MySQL configuration allows direct access to the database server.";
     echo -ne "      Here is a list of all databases available without explicit authentication.\n\n";
@@ -66,7 +66,7 @@ else
 #If access to MySQL without a user fails, try some common usernames without specifying a password.
     for userName in "${previewUserList[@]}";
     do
-    probedPrvwOutput=$(mysql --user=${userName} --password="." --execute="show databases;");
+    probedPrvwOutput=$(mysql --user=${userName} --password="." --execute="show databases;" 2>&1 );
     if [[ $(echo ${probedPrvwOutput} | grep -P "(information_schema)" ) != "" ]]; then
         echo     "Note: Your MySQL configuration allows the user: ${userName} to access the";
         echo     "      database server without a password. Here is a list of all databases";
