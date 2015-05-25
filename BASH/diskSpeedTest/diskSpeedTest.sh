@@ -45,6 +45,8 @@
 ### terminate the execution or scheduled execution of this software; please also
 ### promptly uninstall, or remove this software from your computing infrastructure.
 
+# Todo: Look into the feasibility of either adding csv data export (to expedite chart creation)
+#       or the use of sqlite as an operating database for more atomic data logging and organization.
 
 dateString=$(command date +'%a %m-%d-%Y at %k%M hours' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
 logFile="diskSpeedTests_$dateString.log";
@@ -56,7 +58,7 @@ counts=( "64" "128" "256" "512" "1024" );
 echo -e "Preparing for Disk Speed Tests\n";
 echo -e "################################################################################\n\n\n";
 
-echo " " > ~/"${logFile}";
+touch ~/"${logFile}";
 
 printf "Disk Speed Tests started on %-20s\n" "$(date +'%A %m-%d-%Y at %k%M hours')"; >> "${logFile}";
 
