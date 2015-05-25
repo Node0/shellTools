@@ -48,6 +48,10 @@
 # Todo: Look into the feasibility of either adding csv data export (to expedite chart creation)
 #       or the use of sqlite as an operating database for more atomic data logging and organization.
 
+# Todo: Look into incorporating some loops to conduct read speed testing as well*.
+#       *If we go that far into the rabbit hole, then it may be worth looking into a
+#       ground-up rewrite, possibly in a more structured programming language.
+
 dateString=$(command date +'%a %m-%d-%Y at %k%M hours' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
 logFile="diskSpeedTests_$dateString.log";
 
