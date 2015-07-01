@@ -66,6 +66,7 @@ function processParams {
     # sensitivity flags 'may' have otherwise resulted in more brittle code.
 
     epochParam="\-\-[eE][pP][oO][cC][hH]";
+    mysqlParam="\-\-[sS][aA][mM][pP][lL][eE]\-[mM][yY][sS][qQ][lL]";
     ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
 
     # Out of order parameter processing loop (script may be invoked with params given in any order)
@@ -75,12 +76,22 @@ function processParams {
         # In general: Detect presence of parameter i.e. ( $(echo ${param} | grep -Po) != "" )
         # then handle the particulars using sed for access if the param is a key:value pair.
 
-        #Handle Filename epoch prefix parameter check
+        # Handle Filename epoch prefix parameter check
         if [[ "$(echo "${param}" |command grep -Po '('${epochParam}')')" != "" ]]; then
-            FilenameEpochPrefix="1";
-        else
-            FilenameEpochPrefix="0";
+            filenameEpochPrefix=1;
+        # For some reason the else clause below has always been triggered, even when
+        # the initial test was true setting the first clause to run.
+        #else
+        #   filenameEpochPrefix=0;
         fi
+
+        # Sample Mysql processlist
+        if [[ "$(echo "${param}" |command grep -Po '('${mysqlParam}')')" != "" ]]; then
+            sampleMySQL=1;
+        else
+            sampleMySQL=0;
+        fi
+
     done;
 }
 processParams "${@}";
@@ -166,11 +177,11 @@ ${sed} -r "s~\s~__~g"
 uptimeLabel=$(uptimeString);
 thisSlice=$(dateString);
 
-if [[ "${FilenameEpochPrefix}" == "1" ]];
+if (( "${FilenameEpochPrefix}" == 1 ));
 then
     thisSliceEpoch=$(dateString epoch);
     logFileName="${thisSliceEpoch}-load_avg_${uptimeLabel}__at_${thisSlice}.log";
-elif [[ "${FilenameEpochPrefix}" == "0" ]];
+elif (( "${FilenameEpochPrefix}" == 0 ));
 then
     logFileName="load_avg_${uptimeLabel}__at_${thisSlice}.log";
 fi
@@ -191,7 +202,7 @@ ${netstat} >> ~/${actLogDir}/${logFileName};
 echo -ne "\n\n\n\n\n" >> ~/${actLogDir}/${logFileName};
 
 # Todo: MySQL access needs to be more systematically tested and lack of access handled gracefully.
-if [[ "${1}" == "--and-mysql" ]];
+if [[ "${sampleMySQL}" == "1" ]];
 then
     echo -ne "MySQL Queries Active at ${thisSlice}\n" >> ~/${actLogDir}/${logFileName};
 
