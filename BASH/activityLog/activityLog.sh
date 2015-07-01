@@ -58,6 +58,33 @@
 ### promptly uninstall, or remove this software from your computing infrastructure.
 
 
+function processParams {
+    # Parameter Regexes
+    # Note: Regexes structured with regard for parameter-case
+    # in order to ensure smooth interchangability between grep and sed
+    # without regard to version (of sed) or system. Per-tool case
+    # sensitivity flags 'may' have otherwise resulted in more brittle code.
+
+    epochParam="\-\-[eE][pP][oO][cC][hH]";
+    ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
+
+    # Out of order parameter processing loop (script may be invoked with params given in any order)
+    paramList=("${@}");
+    for param in "${paramList[@]}";
+    do
+        # In general: Detect presence of parameter i.e. ( $(echo ${param} | grep -Po) != "" )
+        # then handle the particulars using sed for access if the param is a key:value pair.
+
+        #Handle Filename epoch prefix parameter check
+        if [[ "$(echo "${param}" |command grep -Po '('${epochParam}')')" != "" ]]; then
+            FilenameEpochPrefix="1";
+        else
+            FilenameEpochPrefix="0";
+        fi
+    done;
+}
+processParams "${@}";
+
 # Cronification variables
 # Todo: Wrap this in a function and test for presence of the commands.
 date=$(which date);
@@ -82,18 +109,20 @@ rm=$(which rm);
 # by the user, activityLog should place the log file in the same directory
 # the script itself.
 actLogDir="activityLog"
-
+centOsVer=$(cat /etc/redhat-release | sed -r 's~(^.+release)(.+)([0-9]\.[0-9]{1,})(.+$)~\3~g');
 
 
 #Grab a timeslice of system activity
 
 function dateString {
-
     if [[ $1 == "" ]]; then
         dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
         echo "${dateStrng}";
     fi
-
+    if [[ $1 == "epoch" ]]; then
+        dateStrng=$(command date +'%s' );
+        echo "${dateStrng}";
+    fi
     if [[ $1 == "hcode" ]]; then
         dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
         hashCode=$(command date +'%N' |md5sum |cut -b 1,3,5,7,9);
@@ -136,7 +165,15 @@ ${sed} -r "s~\s~__~g"
 
 uptimeLabel=$(uptimeString);
 thisSlice=$(dateString);
-logFileName="load_of__${uptimeLabel}__at_${thisSlice}.log"
+
+if [[ "${FilenameEpochPrefix}" == "1" ]];
+then
+    thisSliceEpoch=$(dateString epoch);
+    logFileName="${thisSliceEpoch}-load_avg_${uptimeLabel}__at_${thisSlice}.log";
+elif [[ "${FilenameEpochPrefix}" == "0" ]];
+then
+    logFileName="load_avg_${uptimeLabel}__at_${thisSlice}.log";
+fi
 
 # Todo: All of this needs to be cleaned up and wrapped into discrete funtions.
 ${touch} ~/${actLogDir}/${logFileName};
@@ -167,7 +204,20 @@ then
 
 fi
 
+
 # Todo: The '--transform' parameter is not portable across linux distributions (recently issues with RedHat to Debian compatibility)
 # Look more carefully into this.
-${tar} --transform 's/.*\///g' -czf ~/${actLogDir}/${logFileName}.tar.gz ~/${actLogDir}/${logFileName};
-${rm} -f ~/${actLogDir}/${logFileName};
+# Run tar with the apropriate options (or lack thereof) for the version of CentOS we're on.
+if (( "${centOsVer:0:1}" == '6' ));
+then
+    ${tar} --transform 's/.*\///g' -czf ~/${actLogDir}/${logFileName}.tar.gz ~/${actLogDir}/${logFileName};
+elif (( "${centOsVer:0:1}" == '5' ));
+then
+    ${tar}  -czf ~/${actLogDir}/${logFileName}.tar.gz ~/${actLogDir}/${logFileName};
+fi
+
+# If the tarball was created, then remove the uncompressed log file.
+if [[ -f ~/${actLogDir}/${logFileName}.tar.gz ]];
+then
+    ${rm} -f ~/${actLogDir}/${logFileName};
+fi
