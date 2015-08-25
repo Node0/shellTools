@@ -67,6 +67,7 @@ function processParams {
 
     epochParam="\-\-[eE][pP][oO][cC][hH]";
     mysqlParam="\-\-[sS][aA][mM][pP][lL][eE]\-[mM][yY][sS][qQ][lL]";
+    fsRwRoParam="\-\-[sS][hH][oO][wW][rR][oO][oO][tT][fF][sS][sS][tT][aA][tT][eE]"
     ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
 
     # Out of order parameter processing loop (script may be invoked with params given in any order)
@@ -83,6 +84,11 @@ function processParams {
         # the initial test was true setting the first clause to run.
         #else
         #   filenameEpochPrefix=0;
+        fi
+
+        # Handle Root Filesystem Read/Write or Read-Only state check param
+        if [[ "$(echo "${param}" |command grep -Po '('${fsRwRoParam}')')" != "" ]]; then
+            runRootFsStateCheck=1;
         fi
 
         # Sample Mysql processlist
@@ -113,6 +119,7 @@ sleep=$(which sleep);
 gzip=$(which gzip);
 tar=$(which tar);
 rm=$(which rm);
+mkdir=$(which mkdir);
 
 # Log Directory
 # Todo: Re-think this to handle both automatic (cron-triggered) mode
@@ -139,6 +146,31 @@ function dateString {
         hashCode=$(command date +'%N' |md5sum |cut -b 1,3,5,7,9);
         echo ""${dateStrng}"-"${hashCode}"";
     fi
+}
+
+
+function rootFsRwRoStateCheck {
+
+# Test if the root filesystem has been mounted Read/Write or Read-Only
+if [[ $(mount | grep -Pi "^(.+on)(\s{1,})(\/\s)" | grep -Pio "(rw)")  == "rw" ]]; then
+mountRwFlag=1;
+else
+mountRwFlag=0;
+fi
+
+# Test if we can actually write to a file (in the user's home directory).
+cd /
+testFile="filesystemReadWriteTestFile.txt";
+touch ${testFile};
+echo "Test File Contents" >> ${testFile};
+
+if [[ -f ${testFile} ]]; then
+fileWriteTest=1;
+else
+fileWriteTest=0;
+fi
+
+rm -f ${testFile};
 }
 
 
@@ -177,16 +209,48 @@ ${sed} -r "s~\s~__~g"
 uptimeLabel=$(uptimeString);
 thisSlice=$(dateString);
 
-if (( "${FilenameEpochPrefix}" == 1 ));
+if (( filenameEpochPrefix == 1 ));
 then
+    # Generate the date-string as a unix epoch
     thisSliceEpoch=$(dateString epoch);
+
+    # If enabled, run the root filesystem check and alter the filename accordingly
+    if (( runRootFsStateCheck == 1 )); then
+    rootFsRwRoStateCheck;
+        if (( mountRwFlag == 1 && fileWriteTest == 1 )); then
+        logFileName="${thisSliceEpoch}-load_avg_${uptimeLabel}_fs-is-mounted-RW_at_${thisSlice}.log";
+        elif (( mountRwFlag == 1 && fileWriteTest == 0 )); then
+        logFileName="${thisSliceEpoch}-load_avg_${uptimeLabel}_fs-is-mounted-??_at_${thisSlice}.log";
+        elif (( mountRwFlag == 0 && fileWriteTest == 1 )); then
+        logFileName="${thisSliceEpoch}-load_avg_${uptimeLabel}_fs-is-mounted-??_at_${thisSlice}.log";
+        elif (( mountRwFlag == 0 && fileWriteTest == 0 )); then
+        logFileName="${thisSliceEpoch}-load_avg_${uptimeLabel}_fs-is-mounted-RO_at_${thisSlice}.log";
+        fi
+    else
     logFileName="${thisSliceEpoch}-load_avg_${uptimeLabel}__at_${thisSlice}.log";
-elif (( "${FilenameEpochPrefix}" == 0 ));
-then
+    fi
+
+elif (( filenameEpochPrefix == 0 )); then
+
+    # If enabled, run the root filesystem check and alter the filename accordingly
+    if (( runRootFsStateCheck == 1 )); then
+    rootFsRwRoStateCheck;
+        if (( mountRwFlag == 1 && fileWriteTest == 1 )); then
+        logFileName="load_avg_${uptimeLabel}_fs-is-mounted-RW_at_${thisSlice}.log";
+        elif (( mountRwFlag == 1 && fileWriteTest == 0 )); then
+        logFileName="load_avg_${uptimeLabel}_fs-is-mounted-??_at_${thisSlice}.log";
+        elif (( mountRwFlag == 0 && fileWriteTest == 1 )); then
+        logFileName="load_avg_${uptimeLabel}_fs-is-mounted-??_at_${thisSlice}.log";
+        elif (( mountRwFlag == 0 && fileWriteTest == 0 )); then
+        logFileName="load_avg_${uptimeLabel}_fs-is-mounted-RO_at_${thisSlice}.log";
+        fi
+    else
     logFileName="load_avg_${uptimeLabel}__at_${thisSlice}.log";
+    fi
 fi
 
 # Todo: All of this needs to be cleaned up and wrapped into discrete funtions.
+if [[ ! -d ~/${actLogDir} ]]; then ${mkdir} ~/${actLogDir}; fi
 ${touch} ~/${actLogDir}/${logFileName};
 ${top} -b -M -H -n1 >>  ~/${actLogDir}/${logFileName};
 echo -ne "\n\n\n\n\n\n\n" >> ~/${actLogDir}/${logFileName};
