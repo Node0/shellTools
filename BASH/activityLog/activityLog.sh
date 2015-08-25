@@ -39,7 +39,6 @@
 #   running on the server during the activity log window (timeslice).
 
 
-
 ### Disclaimer
 ### --------------------------------------------------------------
 ### This script and all accompanying configuration, directive, executable, and
