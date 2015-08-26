@@ -38,7 +38,6 @@
 # *(MySQL) 60 high-freqeuency samples of active queries
 #   running on the server during the activity log window (timeslice).
 
-
 ### Disclaimer
 ### --------------------------------------------------------------
 ### This script and all accompanying configuration, directive, executable, and
