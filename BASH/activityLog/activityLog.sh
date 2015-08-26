@@ -76,7 +76,6 @@ rm=$(which rm);
 mkdir=$(which mkdir);
 whoami=$(which whoami);
 
-
 # Set the home directory for this run as the current user's home directory
 homeDirEnvBackup="${HOME}";
 currentUsrHomeDir=$(${grep} -P '(^'$(${whoami})')' /etc/passwd | ${awk} 'BEGIN { FS = ":" } ; { print $6 }');
