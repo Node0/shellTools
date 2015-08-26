@@ -17,7 +17,7 @@
 # General Information
 # ----------------------------------------------------------------
 # Name: activityLog.sh
-# Version: v0.1
+# Version: v0.2
 # Release: Development
 # Author: Joe Hacobian
 # Usage: Run without parameters for usage info.
@@ -56,6 +56,32 @@
 ### terminate the execution or scheduled execution of this software; please also
 ### promptly uninstall, or remove this software from your computing infrastructure.
 
+# Cronification variables
+# Todo: Wrap this in a function and test for presence of the commands.
+date=$(which date);
+md5sum=$(which md5sum);
+cut=$(which cut);
+grep=$(which grep);
+awk=$(which awk);
+sed=$(which sed);
+cat=$(which cat);
+uptime=$(which uptime);
+netstat=$(which netstat);
+top=$(which top);
+touch=$(which touch);
+mysql=$(which mysql);
+sleep=$(which sleep);
+gzip=$(which gzip);
+tar=$(which tar);
+rm=$(which rm);
+mkdir=$(which mkdir);
+whoami=$(which whoami);
+
+
+# Set the home directory for this run as the current user's home directory
+homeDirEnvBackup="${HOME}";
+currentUsrHomeDir=$(${grep} -P '(^'$(${whoami})')' /etc/passwd | ${awk} 'BEGIN { FS = ":" } ; { print $6 }');
+HOME="${currentUsrHomeDir}";
 
 function processParams {
     # Parameter Regexes
@@ -101,25 +127,6 @@ function processParams {
 }
 processParams "${@}";
 
-# Cronification variables
-# Todo: Wrap this in a function and test for presence of the commands.
-date=$(which date);
-md5sum=$(which md5sum);
-cut=$(which cut);
-grep=$(which grep);
-sed=$(which sed);
-cat=$(which cat);
-uptime=$(which uptime);
-netstat=$(which netstat);
-top=$(which top);
-touch=$(which touch);
-mysql=$(which mysql);
-sleep=$(which sleep);
-gzip=$(which gzip);
-tar=$(which tar);
-rm=$(which rm);
-mkdir=$(which mkdir);
-
 # Log Directory
 # Todo: Re-think this to handle both automatic (cron-triggered) mode
 # as well as an interactively called (by the user) mode. When run interactively
@@ -130,7 +137,6 @@ centOsVer=$(cat /etc/redhat-release | sed -r 's~(^.+release)(.+)([0-9]\.[0-9]{1,
 
 
 #Grab a timeslice of system activity
-
 function dateString {
     if [[ $1 == "" ]]; then
         dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
@@ -157,7 +163,7 @@ else
 mountRwFlag=0;
 fi
 
-# Test if we can actually write to a file (in the user's home directory).
+# Test if we can actually write to a file (in the filesystem root directory).
 cd /
 testFile="filesystemReadWriteTestFile.txt";
 touch ${testFile};
@@ -295,3 +301,8 @@ if [[ -f ~/${actLogDir}/${logFileName}.tar.gz ]];
 then
     ${rm} -f ~/${actLogDir}/${logFileName};
 fi
+
+# Set the environment variables
+# that we've changed back to how
+# we found them before this script ran.
+HOME="${homeDirEnvBackup}";
