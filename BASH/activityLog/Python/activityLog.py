@@ -213,8 +213,8 @@ def main():
 
 if __name__ == '__main__':
 	# This stuff should probably be moved to main()
-
 	# print(current_user)
+	current_platform = platform.platform().lower() # platform information in lower case
 	if "linux" in current_platform or "cygwin" in current_platform:
 		main()
 	else:
