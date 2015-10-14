@@ -63,6 +63,7 @@ def fileWriteTest():
 			return True
 	except:
 		print("Cannot write to root (/) directory.")
+		return False
 
 def topRC():
 	toprcexists = os.path.isfile("~/.toprc")
@@ -105,12 +106,13 @@ def getServerLoad():
 		serverLoad = os.getloadavg()
 	except:
 		return "os.getloadavg_failed"
+	# Fix this
 	serverLoad_formatted = ""
 	for i in serverLoad:
 		serverLoad_formatted += "{}.2f".format(i)
 	return serverLoad_formatted
 
-def generateFilename(args):
+def generateLogFilename(args):
 	# Doesn't work in Python3, why?  SOmething to do with how it handles strings.
 	# uptime_label = str(uptimeLabel()[0]).rstrip() # gets uptimelabel and eliminates end of line
 	serverLoad = getServerLoad()
@@ -143,7 +145,7 @@ def generateFilename(args):
 
 	return logFileName
 
-def createLogDir(actLogDir = "activityLog"):
+def createLogDir(actLogDir = "~/activityLog"):
 	# Log Directory
 	# Todo: Re-think this to handle both automatic (cron-triggered) mode
 	# as well as an interactively called (by the user) mode. When run interactively
@@ -151,12 +153,22 @@ def createLogDir(actLogDir = "activityLog"):
 	# the script itself.
 	# actLogDir="activityLog"
 	# centOsVer=$(cat /etc/redhat-release | sed -r 's~(^.+release)(.+)([0-9]\.[0-9]{1,})(.+$)~\3~g');
-	actLogDir_exists = os.path.isfile("~/{}".format(actLogDir))
+	# actLogDir_exists = os.path.isdir(actLogDir)
 	# second argument should be permissions octal, default 0777
-	if actLogDir_exists != True: os.mkdir("~/{}".format(actLogDir))
+	# if actLogDir_exists == False: 
+	# 	os.mkdir("~/{}".format(actLogDir))
+
+	try:
+		os.makedirs(actLogDir)
+	except OSError:
+		if not os.path.isdir(actLogDir):
+			raise
+
+	return actLogDir
 
 def getTopOutput():
-	# cmd = """top -b -M -H -n1""" # Doesn't work on cygwin, using bottom version in the meantime.
+	# Doesn't work on cygwin, using bottom version in the meantime.
+	# cmd = """top -b -M -H -n1""" 
 	cmd = """top -b -H -n1""" 
 	return run_command(cmd)[0]
 
@@ -171,6 +183,28 @@ def getDaemonsAndPorts():
 def getNetworkConnections():
 	cmd = """netstat"""
 	return run_command(cmd)[0]
+
+def writeTheLog(logfilename, logdir = "activityLog"):
+	createLogDir(logdir)
+	logcation = "~/{}/{}".format(logdir,logfilename)
+	try:
+		with open(logcation, 'w') as logfile:
+			logfile.write(getTopOutput())
+			logfile.write("\n\n\n\n\n\n\n")
+			logfile.write("Thoroughput on NetWork Interfaces:\n")
+			logfile.write(getNDeviceThroughput())
+			logfile.write("\n\n")
+			logfile.write("Daemons and Open Ports list:\n")
+			logfile.write(getDaemonsAndPorts())
+			logfile.write("\n\n")
+			logfile.write("Network Connections:\n")
+			logfile.write("\n\n\n\n\n\n\n")
+			# Insert the MySQL bit here
+			logfile.close()
+	except Exception as e:
+		print("Error writing to log file. Exception: {}".format(e))
+
+
 
 
 
@@ -204,11 +238,14 @@ def main():
 		print("Server Load: {}".format(getServerLoad()))
 	elif "cygwin" in current_platform:
 		print("Server Load: {}".format(getServerLoad_BASH()))
-	print("Filename: {}".format(generateFilename(args)))
-	print("Top output: {}".format(getTopOutput()))
-	print("Throughput on Network Interface: {}".format(getNDeviceThroughput()))
-	print("Daemons and Open Ports list: {}".format(getDaemonsAndPorts()))
+	print("Filename: {}".format(generateLogFilename(args)))
+	logfilename = generateLogFilename(args)
+	# print("Top output: {}".format(getTopOutput()))
+	# print("Throughput on Network Interface: {}".format(getNDeviceThroughput()))
+	# print("Daemons and Open Ports list: {}".format(getDaemonsAndPorts()))
 	# print("Network connections: ".format(getNetworkConnections())) # Sits there forever on cygwin
+	print("Writing log file...")
+	writeTheLog(logfilename)
 
 
 if __name__ == '__main__':
