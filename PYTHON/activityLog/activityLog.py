@@ -66,6 +66,7 @@ def fileWriteTest():
 		return False
 
 def topRC():
+	# Fix the ~ expansion stuff
 	toprcexists = os.path.isfile("~/.toprc")
 	toprc = """RCfile for \"top with windows\"
 Id:a, Mode_altscr=0, Mode_irixps=1, Delay_time=3.000, Curwin=0
