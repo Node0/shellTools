@@ -158,6 +158,9 @@ def createLogDir(actLogDir = "~/activityLog"):
 	# if actLogDir_exists == False: 
 	# 	os.mkdir("~/{}".format(actLogDir))
 
+	# Expands ~ to user home dir
+	actLogDir = os.path.expanduser(actLogDir)
+
 	try:
 		os.makedirs(actLogDir)
 	except OSError:
@@ -184,9 +187,10 @@ def getNetworkConnections():
 	cmd = """netstat"""
 	return run_command(cmd)[0]
 
-def writeTheLog(logfilename, logdir = "activityLog"):
-	createLogDir(logdir)
-	logcation = "~/{}/{}".format(logdir,logfilename)
+def writeTheLog(logfilename, actLogDir = "~/activityLog"):
+	actLogDir = os.path.expanduser(actLogDir)
+	createLogDir(actLogDir)
+	logcation = "{}/{}".format(actLogDir,logfilename)
 	try:
 		with open(logcation, 'w') as logfile:
 			logfile.write(getTopOutput())
