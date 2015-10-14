@@ -66,8 +66,10 @@ def fileWriteTest():
 		return False
 
 def topRC():
+	# expands ~/.toprc location to toprc_loc
+	toprc_loc = os.path.expanduser("~/.toprc")
 	# Fix the ~ expansion stuff
-	toprcexists = os.path.isfile("~/.toprc")
+	toprcexists = os.path.isfile(toprc_loc)
 	toprc = """RCfile for \"top with windows\"
 Id:a, Mode_altscr=0, Mode_irixps=1, Delay_time=3.000, Curwin=0
 Def     fieldscur=AEHIOQTWKNMbcdfgjplrsuvyzX
@@ -84,10 +86,10 @@ Usr     fieldscur=ABDECGfhijlopqrstuvyzMKNWX
         summclr=3, msgsclr=3, headclr=2, taskclr=3"""
 
 	if toprcexists:
-		shutil.move("~/.toprc", "~/.backup_toprc")
+		shutil.move(toprc_loc, os.path.expanduser("~/.backup_toprc"))
 
 	try:
-		with open("~/.toprc", 'w') as f:
+		with open(toprc_loc, 'w') as f:
 			f.write(toprc)
 			f.close()
 	except:
