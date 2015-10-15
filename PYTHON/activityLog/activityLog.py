@@ -29,7 +29,7 @@ def run_command(cmd):
 # 	# Need to implement Joe's hcode segment here.
 # 	return run_command(cmd)
 
-def dateString(epoch):
+def dateString(epoch = False):
 	# should we use GMT instead for consistency?
 	localtime = time.localtime() 
 	# returns seconds from epoch
@@ -190,7 +190,13 @@ def getNetworkConnections():
 	cmd = """netstat"""
 	return run_command(cmd)[0]
 
-def writeTheLog(logfilename, actLogDir = "~/activityLog"):
+def sampleMySQL():
+	# TODO: setup error handling for this
+	cmd = "mysql --execute \"show full processlist;\""
+	return run_command(cmd)[0]
+
+def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
+	timestamp = dateString()
 	actLogDir = os.path.expanduser(actLogDir)
 	createLogDir(actLogDir)
 	logcation = "{}/{}".format(actLogDir,logfilename)
@@ -207,6 +213,13 @@ def writeTheLog(logfilename, actLogDir = "~/activityLog"):
 			logfile.write("Network Connections:\n")
 			logfile.write("\n\n\n\n\n\n\n")
 			# Insert the MySQL bit here
+			if args.sample_mysql == True:
+				logfile.write("MySQL Queries Active at {}".format(timestamp))
+				for i in range(60):
+					logfile.write("\n")
+					logfile.write(sampleMySQL())
+					logfile.write("\n\n")
+					time.sleep(0.25)
 			logfile.close()
 	except Exception as e:
 		print("Error writing to log file. Exception: {}".format(e))
@@ -252,7 +265,7 @@ def main():
 	# print("Daemons and Open Ports list: {}".format(getDaemonsAndPorts()))
 	# print("Network connections: ".format(getNetworkConnections())) # Sits there forever on cygwin
 	print("Writing log file...")
-	writeTheLog(logfilename)
+	writeTheLog(args, logfilename)
 
 
 if __name__ == '__main__':
