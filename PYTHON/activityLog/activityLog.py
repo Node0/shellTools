@@ -217,13 +217,13 @@ def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 			logfile.write("Network Connections:\n")
 			logfile.write("\n\n\n\n\n\n\n")
 			# Insert the MySQL bit here
-			if args.sample_mysql == True:
-				logfile.write("MySQL Queries Active at {}".format(timestamp))
-				for i in range(60):
+			if args.mysql_usr != None:
+				for i in range(args.mysql_queries):
+					logfile.write("MySQL Queries Active at {}".format(timestamp))
 					logfile.write("\n")
 					logfile.write(sampleMySQL(args.mysql_usr, args.mysql_pwd))
 					logfile.write("\n\n")
-					time.sleep(0.25)
+					time.sleep(args.mysql_interval)
 			logfile.close()
 	except Exception as e:
 		print("Error writing to log file. Exception: {}".format(e))
@@ -242,14 +242,18 @@ def main():
 	parser.add_argument('--ip', help = 'IP address.')
 	parser.add_argument('--epoch', help='Epoch filename prefix option.', action="store_true")
 	parser.add_argument('--showrootfsstate', help='Checks if root FS is r/w.', action="store_true")
-	parser.add_argument('--sample-mysql', help='Gathers MySQL data.', action="store_true")
+	# parser.add_argument('--sample-mysql', help='Gathers MySQL data.', action="store_true")
 	parser.add_argument('--mysql_usr', help='MySQL user')
 	parser.add_argument('--mysql_pwd', help='MySQL password')
+	parser.add_argument('--mysql_queries', 
+		help='Number of MySQL queries for each report. Default = 60.', default = 60)
+	parser.add_argument('--mysql_interval', 
+		help='Delay between MySQL queries, in seconds. Default = 0.25.', default = 0.25)
 	args=parser.parse_args()
 
 	# Check MySQL credentials if --sample_mysql flag set
 	# There is a better way to do error handling.  Use try/except somehow.
-	if args.sample_mysql == True:
+	if args.mysql_usr != None:
 		if "Id" not in sampleMySQL(args.mysql_usr, args.mysql_pwd):
 			print "MySQL credentials return invalid response"
 			exit()
