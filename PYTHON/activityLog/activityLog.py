@@ -295,7 +295,7 @@ if __name__ == '__main__':
 	if "linux" in current_platform or "cygwin" in current_platform:
 		# Expand this to all used BASH commands, return values in a list of True/False
 		# and check if False in the list/array.
-		# Use better error handling.  Try/Except with a while something == True
+		# Use better error handling.  Try/Except with a while True
 		# UPDATE: the above probably not necessary, since mysql and netstat 
 		# are the only optional packages used in this script.  
 		# STILL: should probably do the alias assignments in the original script,
