@@ -112,7 +112,7 @@ def getServerLoad():
 	# Fix this
 	serverLoad_formatted = ""
 	for i in serverLoad:
-		serverLoad_formatted += "{}.2f".format(i)
+		serverLoad_formatted += "{}_".format(i)
 	return serverLoad_formatted
 
 def generateLogFilename(args):
