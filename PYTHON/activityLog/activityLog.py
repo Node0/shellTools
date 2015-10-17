@@ -66,6 +66,7 @@ def fileWriteTest():
 		return False
 
 def topRC():
+	# Custom toprc config.  I have no idea what is happening here.
 	# expands ~/.toprc location to toprc_loc
 	toprc_loc = os.path.expanduser("~/.toprc")
 	# Fix the ~ expansion stuff
@@ -154,6 +155,7 @@ def createLogDir(actLogDir = "~/activityLog"):
 	# as well as an interactively called (by the user) mode. When run interactively
 	# by the user, activityLog should place the log file in the same directory
 	# the script itself.
+
 	# actLogDir="activityLog"
 	# centOsVer=$(cat /etc/redhat-release | sed -r 's~(^.+release)(.+)([0-9]\.[0-9]{1,})(.+$)~\3~g');
 	# actLogDir_exists = os.path.isdir(actLogDir)
@@ -161,7 +163,7 @@ def createLogDir(actLogDir = "~/activityLog"):
 	# if actLogDir_exists == False: 
 	# 	os.mkdir("~/{}".format(actLogDir))
 
-	# Expands ~ to user home dir
+	# Expands "~" to user home dir
 	actLogDir = os.path.expanduser(actLogDir)
 
 	try:
@@ -190,10 +192,11 @@ def getNetworkConnections():
 	cmd = """netstat"""
 	return run_command(cmd)[0]
 
-def sampleMySQL():
+def sampleMySQL(user, pwd):
 	# TODO: setup error handling for this
 
-	cmd = "mysql --execute \"show full processlist;\""
+	cmd = "mysql -u{} -p{} --execute \"show full processlist;\"".format(
+		user, pwd)
 	return run_command(cmd)[0]
 
 def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
@@ -202,9 +205,6 @@ def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 	createLogDir(actLogDir)
 	logcation = "{}/{}".format(actLogDir,logfilename)
 	try:
-		if run_command("which netstat") == "":
-			print("Netstat not installed")
-			quit()
 		with open(logcation, 'w') as logfile:
 			logfile.write(getTopOutput())
 			logfile.write("\n\n\n\n\n\n\n")
@@ -221,7 +221,7 @@ def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 				logfile.write("MySQL Queries Active at {}".format(timestamp))
 				for i in range(60):
 					logfile.write("\n")
-					logfile.write(sampleMySQL())
+					logfile.write(sampleMySQL(args.mysql_usr, args.mysql_pwd))
 					logfile.write("\n\n")
 					time.sleep(0.25)
 			logfile.close()
@@ -237,15 +237,22 @@ def main():
 	# Create argument parameters. 
 	# TODO: Find a way to make it case-insensitive.  Something about type = str.lower, but I dont know where.
 	# TODO: make sure ip address is correctly formatted.  Make it optional?
+	# TODO: find out why Joe included ip address at all in the first place
 	parser = argparse.ArgumentParser(description='Creates a general \'timeslice\' snapshot of activity on a server.')
 	parser.add_argument('--ip', help = 'IP address.')
 	parser.add_argument('--epoch', help='Epoch filename prefix option.', action="store_true")
 	parser.add_argument('--showrootfsstate', help='Checks if root FS is r/w.', action="store_true")
 	parser.add_argument('--sample-mysql', help='Gathers MySQL data.', action="store_true")
-	parser.add_argument('--mysql_db', help='MySQL database')
 	parser.add_argument('--mysql_usr', help='MySQL user')
 	parser.add_argument('--mysql_pwd', help='MySQL password')
 	args=parser.parse_args()
+
+	# Check MySQL credentials if --sample_mysql flag set
+	# There is a better way to do error handling.  Use try/except somehow.
+	if args.sample_mysql == True:
+		if "Id" not in sampleMySQL(args.mysql_usr, args.mysql_pwd):
+			print "MySQL credentials return invalid response"
+			exit()
 
 	# Get server specs
 	current_user = pwd.getpwuid(os.getuid())[0] # on UNIX, gets the current real user ID
@@ -263,9 +270,12 @@ def main():
 	topRC()
 	if "linux" in current_platform:
 		print("Server Load: {}".format(getServerLoad()))
+	# cygwin python packages don't include os.getloadavg
 	elif "cygwin" in current_platform:
 		print("Server Load: {}".format(getServerLoad_BASH()))
-	print("Filename: {}".format(generateLogFilename(args)))
+	print("Logfile: {}{}".format(createLogDir(), generateLogFilename(args)))
+
+	# Make the damn log file
 	logfilename = generateLogFilename(args)
 	# print("Top output: {}".format(getTopOutput()))
 	# print("Throughput on Network Interface: {}".format(getNDeviceThroughput()))
@@ -276,10 +286,15 @@ def main():
 
 
 if __name__ == '__main__':
-	# This stuff should probably be moved to main()
-	# print(current_user)
+
+	# Check environment before running logfile creation.  Perhaps run this in main() ?
 	current_platform = platform.platform().lower() # platform information in lower case
 	if "linux" in current_platform or "cygwin" in current_platform:
+		# Expand this to all used BASH commands, return values in a list of True/False
+		# and check if False in the list/array
+		if run_command("which netstat") == "":
+			print("Netstat not installed")
+			quit()
 		main()
 	else:
 		print("This script is designed for use on Linux systems only.")
