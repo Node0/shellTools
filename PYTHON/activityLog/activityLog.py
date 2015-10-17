@@ -192,6 +192,7 @@ def getNetworkConnections():
 
 def sampleMySQL():
 	# TODO: setup error handling for this
+
 	cmd = "mysql --execute \"show full processlist;\""
 	return run_command(cmd)[0]
 
@@ -201,6 +202,9 @@ def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 	createLogDir(actLogDir)
 	logcation = "{}/{}".format(actLogDir,logfilename)
 	try:
+		if run_command("which netstat") == "":
+			print("Netstat not installed")
+			quit()
 		with open(logcation, 'w') as logfile:
 			logfile.write(getTopOutput())
 			logfile.write("\n\n\n\n\n\n\n")
@@ -234,10 +238,13 @@ def main():
 	# TODO: Find a way to make it case-insensitive.  Something about type = str.lower, but I dont know where.
 	# TODO: make sure ip address is correctly formatted.  Make it optional?
 	parser = argparse.ArgumentParser(description='Creates a general \'timeslice\' snapshot of activity on a server.')
-	parser.add_argument('ipaddress', help = 'IP address.')
+	parser.add_argument('--ip', help = 'IP address.')
 	parser.add_argument('--epoch', help='Epoch filename prefix option.', action="store_true")
-	parser.add_argument('--sample-mysql', help='Gathers MySQL data.', action="store_true")
 	parser.add_argument('--showrootfsstate', help='Checks if root FS is r/w.', action="store_true")
+	parser.add_argument('--sample-mysql', help='Gathers MySQL data.', action="store_true")
+	parser.add_argument('--mysql_db', help='MySQL database')
+	parser.add_argument('--mysql_usr', help='MySQL user')
+	parser.add_argument('--mysql_pwd', help='MySQL password')
 	args=parser.parse_args()
 
 	# Get server specs
