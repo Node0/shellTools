@@ -46,10 +46,12 @@ def dateString(epoch = False):
 		return dateTime
 
 
-# Checks to see if root directory is read/write 
+# Checks to see if root (/) directory is read/write 
 def rootFsRwRoStateCheck():
-	cmd = """mount | grep -Pi "^(.+on)(\s{1,})(\/\s)" | grep -Pio "(rw)"""
-	if run_command(cmd)[0] == "rw":
+	# Mount, filtered to whatever is mounted as /, followed by whether "rw"
+	# is on that line.
+	cmd = "mount | grep -Pi \"^(.+on)(\s{1,})(\/\s)\" | grep -Pio \"(rw)\""
+	if run_command(cmd)[0].rstrip() == "rw":
 		return True
 	else:
 		return False
@@ -62,7 +64,7 @@ def fileWriteTest():
 			os.remove("/testfile.tmp")
 			return True
 	except:
-		print("Cannot write to root (/) directory.")
+		# print("Cannot write to root (/) directory.")
 		return False
 
 def topRC():
@@ -129,7 +131,7 @@ def generateLogFilename(args):
 		thisSliceEpoch = "" # will prefix the filename with nothing
 
 	# Generate filenames
-	if args.showrootfsstate: # If root system file check flag is set
+	if args.rootcheck: # If root system file check flag is set
 		if rootFsRwRoStateCheck() and fileWriteTest(): # if rootFS(rw) is true and filewritetest is successfull 
 			logFileName = "load_avg_{}_fs-is-mounted-RW__at_{}.log".format(
 				serverLoad, thisSlice)
@@ -151,45 +153,42 @@ def generateLogFilename(args):
 
 def createLogDir(actLogDir = "~/activityLog"):
 	# Log Directory
-	# Todo: Re-think this to handle both automatic (cron-triggered) mode
-	# as well as an interactively called (by the user) mode. When run interactively
-	# by the user, activityLog should place the log file in the same directory
-	# the script itself.
+	# Checks to see if script was run by user, or a cron job.
+	# Will create actLogDir in home dir if cron, current working directory 
+	# if run by user.
+	# Explained: sys.stdin will be a TTY if run by console (by the user).
+	if os.isatty(sys.stdin.fileno()):
+		actLogDir = os.getcwd()
+	else:
+		# Expands "~" to user home dir
+		actLogDir = os.path.expanduser(actLogDir)
 
-	# actLogDir="activityLog"
-	# centOsVer=$(cat /etc/redhat-release | sed -r 's~(^.+release)(.+)([0-9]\.[0-9]{1,})(.+$)~\3~g');
-	# actLogDir_exists = os.path.isdir(actLogDir)
-	# second argument should be permissions octal, default 0777
-	# if actLogDir_exists == False: 
-	# 	os.mkdir("~/{}".format(actLogDir))
-
-	# Expands "~" to user home dir
-	actLogDir = os.path.expanduser(actLogDir)
-
-	try:
-		os.makedirs(actLogDir)
-	except OSError:
-		if not os.path.isdir(actLogDir):
-			raise
+		# Clever way to check if directory exists, and create it if it does not
+		# without creating a "race" situation.  Google it.
+		try:
+			os.makedirs(actLogDir)
+		except OSError:
+			if not os.path.isdir(actLogDir):
+				raise
 
 	return actLogDir
 
 def getTopOutput():
 	# Doesn't work on cygwin, using bottom version in the meantime.
 	# cmd = """top -b -M -H -n1""" 
-	cmd = """top -b -H -n1""" 
+	cmd = "top -b -H -n1" 
 	return run_command(cmd)[0]
 
 def getNDeviceThroughput():
-	cmd = """netstat -i"""
+	cmd = "netstat -i"
 	return run_command(cmd)[0]
 
 def getDaemonsAndPorts():
-	cmd = """netstat -plunt"""
+	cmd = "netstat -plunt"
 	return run_command(cmd)[0]
 
 def getNetworkConnections():
-	cmd = """netstat"""
+	cmd = "netstat"
 	return run_command(cmd)[0]
 
 def sampleMySQL(user, pwd):
@@ -229,22 +228,27 @@ def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 		print("Error writing to log file. Exception: {}".format(e))
 
 
-
-
-
-
 def main():
 	# Create argument parameters. 
-	# TODO: Find a way to make it case-insensitive.  Something about type = str.lower, but I dont know where.
-	# TODO: make sure ip address is correctly formatted.  Make it optional?
+	# TODO: Find a way to make it case-insensitive.  Something about type = str.lower, 
+	# but I dont know where.
+	# TODO: make sure ip address is correctly formatted.  Make it optional?  
+	# Why is it even here?
 	# TODO: find out why Joe included ip address at all in the first place
-	parser = argparse.ArgumentParser(description='Creates a general \'timeslice\' snapshot of activity on a server.')
+	parser = argparse.ArgumentParser(
+		description='Creates a general \'timeslice\' snapshot of activity on a server.')
 	parser.add_argument('--ip', help = 'IP address.')
-	parser.add_argument('--epoch', help='Epoch filename prefix option.', action="store_true")
-	parser.add_argument('--showrootfsstate', help='Checks if root FS is r/w.', action="store_true")
+	parser.add_argument('--epoch', help='Prefix log filename with current epoch.', 
+		action="store_true")
+	parser.add_argument('--rootcheck', 
+		help='Checks if root filesystem is r/w. Typically requires root access to run.', 
+		action="store_true")
 	# parser.add_argument('--sample-mysql', help='Gathers MySQL data.', action="store_true")
-	parser.add_argument('--mysql_usr', help='MySQL user')
-	parser.add_argument('--mysql_pwd', help='MySQL password')
+	parser.add_argument('--mysql_usr', 
+		help='MySQL username for localhost. Activates MySQL state logging.')
+	parser.add_argument('--mysql_pwd', 
+		help='MySQL password for --mysql_usr.',
+		default = "")
 	parser.add_argument('--mysql_queries', 
 		help='Number of MySQL queries for each report. Default = 60.', default = 60)
 	parser.add_argument('--mysql_interval', 
@@ -267,25 +271,14 @@ def main():
 
 	# Test area
 	print(args)
-	print("Date: {}".format(dateString(args.epoch)))
-	thisSlice = dateString(args.epoch)[0]
 	print("Read/Write: {}".format(rootFsRwRoStateCheck()))
 	print("fileWriteTest: {}".format(fileWriteTest()))
 	topRC()
-	if "linux" in current_platform:
-		print("Server Load: {}".format(getServerLoad()))
-	# cygwin python packages don't include os.getloadavg
-	elif "cygwin" in current_platform:
-		print("Server Load: {}".format(getServerLoad_BASH()))
-	print("Logfile: {}{}".format(createLogDir(), generateLogFilename(args)))
 
 	# Make the damn log file
+	print("Logfile: {}{}".format(createLogDir(), generateLogFilename(args)))
 	logfilename = generateLogFilename(args)
-	# print("Top output: {}".format(getTopOutput()))
-	# print("Throughput on Network Interface: {}".format(getNDeviceThroughput()))
-	# print("Daemons and Open Ports list: {}".format(getDaemonsAndPorts()))
-	# print("Network connections: ".format(getNetworkConnections())) # Sits there forever on cygwin
-	print("Writing log file...")
+	print("Writing activityLog file...")
 	writeTheLog(args, logfilename)
 
 
