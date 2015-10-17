@@ -66,10 +66,10 @@ def fileWriteTest():
 		return False
 
 def topRC():
-	# Custom toprc config.  I have no idea what is happening here.
-	# expands ~/.toprc location to toprc_loc
+	# Custom ~./toprc config.  I have no idea what is happening here.
+
+	# Expands "~" to user home dir
 	toprc_loc = os.path.expanduser("~/.toprc")
-	# Fix the ~ expansion stuff
 	toprcexists = os.path.isfile(toprc_loc)
 	toprc = """RCfile for \"top with windows\"
 Id:a, Mode_altscr=0, Mode_irixps=1, Delay_time=3.000, Curwin=0
@@ -286,15 +286,24 @@ def main():
 
 
 if __name__ == '__main__':
-
 	# Check environment before running logfile creation.  Perhaps run this in main() ?
 	current_platform = platform.platform().lower() # platform information in lower case
 	if "linux" in current_platform or "cygwin" in current_platform:
 		# Expand this to all used BASH commands, return values in a list of True/False
-		# and check if False in the list/array
+		# and check if False in the list/array.
+		# Use better error handling.  Try/Except with a while something == True
+		# UPDATE: the above probably not necessary, since mysql and netstat 
+		# are the only optional packages used in this script.  
+		# STILL: should probably do the alias assignments in the original script,
+		# to avoid weird custom aliases fucking shit up.
 		if run_command("which netstat") == "":
 			print("Netstat not installed")
 			quit()
-		main()
+		elif run_command("which mysql") == "":
+			print("MySQL not installed")
+			quit()
+		else:
+			main()
 	else:
+		# TODO: make this work in Windows and misc environments
 		print("This script is designed for use on Linux systems only.")
