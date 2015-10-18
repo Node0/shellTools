@@ -115,14 +115,14 @@ def generateLogFilename(args):
 	thisSlice = dateString(False) # get date slice without epoch flag set
 
 	# check for epoch filename prefix flag
-	if args.epoch:
-		print("Epoch flag is set")
-		thisSliceEpoch = dateString(args.epoch) + "-"
+	if args['epoch']:
+		# print("Epoch flag is set")
+		thisSliceEpoch = dateString(args['epoch']) + "-"
 	else:
 		thisSliceEpoch = "" # will prefix the filename with nothing
 
 	# Generate filenames
-	if args.rootcheck: # If root system file check flag is set
+	if args['rootcheck']: # If root system file check flag is set
 		if rootFsRwRoStateCheck() and fileWriteTest(): # if rootFS(rw) is true and filewritetest is successfull 
 			logFileName = "load_avg_{}_fs-is-mounted-RW__at_{}.log".format(
 				serverLoad, thisSlice)
@@ -148,7 +148,7 @@ def createLogDir(args, actLogDir = "~/activityLog"):
 	# Checks to see if script was run by user, or a cron job.
 	# Will create actLogDir in home dir if cron, current working directory 
 	# if run by user.
-	if args.cron == True:
+	if args['cronjob'] == True:
 		actLogDir = os.getcwd()
 	else:
 		# Expands "~" to user home dir
@@ -207,13 +207,13 @@ def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 			logfile.write("Network Connections:\n")
 			logfile.write("\n\n\n\n\n\n\n")
 			# Insert the MySQL bit here
-			if args.mysql_usr != None:
-				for i in range(args.mysql_queries):
+			if args['mysql_usr'] != None:
+				for i in range(args['mysql_queries']):
 					logfile.write("MySQL Queries Active at {}".format(timestamp))
 					logfile.write("\n")
-					logfile.write(sampleMySQL(args.mysql_usr, args.mysql_pwd))
+					logfile.write(sampleMySQL(args['mysql_usr'], args['mysql_pwd']))
 					logfile.write("\n\n")
-					time.sleep(args.mysql_interval)
+					time.sleep(args['mysql_interval'])
 			logfile.close()
 	except Exception as e:
 		print("Error writing to log file. Exception: {}".format(e))
@@ -245,7 +245,11 @@ def main():
 	parser.add_argument('--mysql_interval', 
 		help='Delay between MySQL queries, in seconds. Default = 0.25.', default = 0.25)
 	args=parser.parse_args()
+	# Convert args namespace to dictionary
+	args = vars(args)
 
+	#TEST
+	print(args['mysql_usr'])
 
 	### Get server specs
 	current_platform = platform.platform().lower() # platform information in lower case
@@ -260,18 +264,18 @@ def main():
 		args['cronjob'] = True
 
 
-	### Activates MySQL process logging if args.mysql_usr is set
+	### Activates MySQL process logging if args['mysql_usr'] is set
 	# There is a better way to do error handling.  Use try/except somehow.
-	if args.mysql_usr != None:
-		if "Id" not in sampleMySQL(args.mysql_usr, args.mysql_pwd):
-			print "activityLog: MySQL credentials return invalid response"
+	if args['mysql_usr'] != None:
+		if "Id" not in sampleMySQL(args['mysql_usr'], args['mysql_pwd']):
+			print("activityLog: MySQL credentials return invalid response")
 			exit()
 
 	### DO ALL THE STUFF
 
 	topRC()
 	# Make the damn log file
-	print("Logfile: {}{}".format(createLogDir(), generateLogFilename(args)))
+	print("Logfile: {}{}".format(createLogDir(args), generateLogFilename(args)))
 	logfilename = generateLogFilename(args)
 	print("Writing activityLog file...")
 	writeTheLog(args, logfilename)
