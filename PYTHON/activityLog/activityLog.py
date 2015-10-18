@@ -19,20 +19,10 @@ def run_command(cmd):
 		stdout = subprocess.PIPE, # stdout in [0]
 		stderr = subprocess.PIPE).communicate() # stderr in [1]
 
-# Returns the date, formatted to specifications set by epoch argument
-# OLD BASH VERSION
-# def dateString(epoch):
-# 	if epoch == True:
-# 		cmd = ["command date +'%s' "]
-# 	elif epoch == False:
-# 		cmd = """command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" """
-# 	# Need to implement Joe's hcode segment here.
-# 	return run_command(cmd)
-
 def dateString(epoch = False):
 	# should we use GMT instead for consistency?
 	localtime = time.localtime() 
-	# returns seconds from epoch
+	# returns time from epoch.  ON UNIX, it is 0 hours on Jan. 1st, 1970
 	if epoch == True: 
 		return time.time
 	elif epoch != True:
@@ -46,9 +36,10 @@ def dateString(epoch = False):
 		return dateTime
 
 
-# Checks to see if root (/) directory is read/write 
 def rootFsRwRoStateCheck():
-	# Mount, filtered to whatever is mounted as /, followed by whether "rw"
+# Checks to see if root (/) directory is read/write 
+
+	# Mount, filtered to whatever is mounted as /, filtered by whether "rw"
 	# is on that line.
 	cmd = "mount | grep -Pi \"^(.+on)(\s{1,})(\/\s)\" | grep -Pio \"(rw)\""
 	if run_command(cmd)[0].rstrip() == "rw":
@@ -98,8 +89,8 @@ Usr     fieldscur=ABDECGfhijlopqrstuvyzMKNWX
 	except:
 		print("Cannot write to ~/.toprc.")
 
-# OLD BASH WAY OF GETTING SERVER LOAD 
 def getServerLoad_BASH():
+# OLD BASH WAY OF GETTING SERVER LOAD 
 	cmd = ("""uptime | grep -Pio "average\:(\s\d{1,}\.\d{1,}\,){1,}(\s\d{1,}\.\d{1,})" |"""
 	"""sed -r "s~(average\:\s)~~g" |"""
 	"""sed -r "s~\,~~g" |"""
@@ -112,7 +103,6 @@ def getServerLoad():
 		serverLoad = os.getloadavg()
 	except:
 		return "os.getloadavg_failed"
-	# Fix this
 	serverLoad_formatted = ""
 	for i in serverLoad:
 		serverLoad_formatted += "{}_".format(i)
@@ -122,11 +112,12 @@ def generateLogFilename(args):
 	# Doesn't work in Python3, why?  SOmething to do with how it handles strings.
 	# uptime_label = str(uptimeLabel()[0]).rstrip() # gets uptimelabel and eliminates end of line
 	serverLoad = getServerLoad()
-	thisSlice = str(dateString(False)).rstrip() # get date slice without epoch flag set
+	thisSlice = dateString(False) # get date slice without epoch flag set
+
 	# check for epoch filename prefix flag
 	if args.epoch:
 		print("Epoch flag is set")
-		thisSliceEpoch = str(dateString(args.epoch)[0]).rstrip() + "-"
+		thisSliceEpoch = dateString(args.epoch) + "-"
 	else:
 		thisSliceEpoch = "" # will prefix the filename with nothing
 
@@ -151,13 +142,13 @@ def generateLogFilename(args):
 
 	return logFileName
 
-def createLogDir(actLogDir = "~/activityLog"):
-	# Log Directory
+def createLogDir(args, actLogDir = "~/activityLog"):
+	# Check/create log directory
+
 	# Checks to see if script was run by user, or a cron job.
 	# Will create actLogDir in home dir if cron, current working directory 
 	# if run by user.
-	# Explained: sys.stdin will be a TTY if run by console (by the user).
-	if os.isatty(sys.stdin.fileno()):
+	if args.cron == True:
 		actLogDir = os.getcwd()
 	else:
 		# Expands "~" to user home dir
@@ -201,7 +192,7 @@ def sampleMySQL(user, pwd):
 def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 	timestamp = dateString()
 	actLogDir = os.path.expanduser(actLogDir)
-	createLogDir(actLogDir)
+	createLogDir(args, actLogDir)
 	logcation = "{}/{}".format(actLogDir,logfilename)
 	try:
 		with open(logcation, 'w') as logfile:
@@ -229,21 +220,21 @@ def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 
 
 def main():
-	# Create argument parameters. 
+	### Create argument parameters. 
 	# TODO: Find a way to make it case-insensitive.  Something about type = str.lower, 
 	# but I dont know where.
 	# TODO: make sure ip address is correctly formatted.  Make it optional?  
 	# Why is it even here?
-	# TODO: find out why Joe included ip address at all in the first place
+	# TODO: find out why Joe included ip address at all
 	parser = argparse.ArgumentParser(
 		description='Creates a general \'timeslice\' snapshot of activity on a server.')
 	parser.add_argument('--ip', help = 'IP address.')
 	parser.add_argument('--epoch', help='Prefix log filename with current epoch.', 
 		action="store_true")
 	parser.add_argument('--rootcheck', 
-		help='Checks if root filesystem is r/w. Typically requires root access to run.', 
+		help='Checks if root filesystem is r/w and includes it in the log filename.'
+		' Typically requires root access to run.', 
 		action="store_true")
-	# parser.add_argument('--sample-mysql', help='Gathers MySQL data.', action="store_true")
 	parser.add_argument('--mysql_usr', 
 		help='MySQL username for localhost. Activates MySQL state logging.')
 	parser.add_argument('--mysql_pwd', 
@@ -255,26 +246,30 @@ def main():
 		help='Delay between MySQL queries, in seconds. Default = 0.25.', default = 0.25)
 	args=parser.parse_args()
 
-	# Check MySQL credentials if --sample_mysql flag set
+
+	### Get server specs
+	current_platform = platform.platform().lower() # platform information in lower case
+
+	# Checks to see if script was run by user, or a cron job.
+	# Will create actLogDir in home dir if cron, current working directory 
+	# if run by user.
+	# Explained: sys.stdin will be a TTY if run by console (by the user).
+	if os.isatty(sys.stdin.fileno()):
+		args['cronjob'] = False
+	else:
+		args['cronjob'] = True
+
+
+	### Activates MySQL process logging if args.mysql_usr is set
 	# There is a better way to do error handling.  Use try/except somehow.
 	if args.mysql_usr != None:
 		if "Id" not in sampleMySQL(args.mysql_usr, args.mysql_pwd):
-			print "MySQL credentials return invalid response"
+			print "activityLog: MySQL credentials return invalid response"
 			exit()
 
-	# Get server specs
-	current_user = pwd.getpwuid(os.getuid())[0] # on UNIX, gets the current real user ID
-	# current_user = os.environ['USERNAME'] # alternative multiplatform method for finding current user
-	homeDirEnvBackup = os.environ['HOME']
-	current_platform = platform.platform().lower() # platform information in lower case
-	print(current_platform)
+	### DO ALL THE STUFF
 
-	# Test area
-	print(args)
-	print("Read/Write: {}".format(rootFsRwRoStateCheck()))
-	print("fileWriteTest: {}".format(fileWriteTest()))
 	topRC()
-
 	# Make the damn log file
 	print("Logfile: {}{}".format(createLogDir(), generateLogFilename(args)))
 	logfilename = generateLogFilename(args)
