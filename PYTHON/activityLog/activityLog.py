@@ -248,9 +248,6 @@ def main():
 	# Convert args namespace to dictionary
 	args = vars(args)
 
-	#TEST
-	print(args['mysql_usr'])
-
 	### Get server specs
 	current_platform = platform.platform().lower() # platform information in lower case
 
