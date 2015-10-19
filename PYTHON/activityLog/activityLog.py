@@ -225,12 +225,8 @@ def main():
 	### Create argument parameters. 
 	# TODO: Find a way to make it case-insensitive.  Something about type = str.lower, 
 	# but I dont know where.
-	# TODO: make sure ip address is correctly formatted.  Make it optional?  
-	# Why is it even here?
-	# TODO: find out why Joe included ip address at all
 	parser = argparse.ArgumentParser(
 		description='Creates a general \'timeslice\' snapshot of activity on a server.')
-	parser.add_argument('--ip', help = 'IP address.')
 	parser.add_argument('--epoch', help='Prefix log filename with current epoch.', 
 		action="store_true")
 	parser.add_argument('--rootcheck', 
