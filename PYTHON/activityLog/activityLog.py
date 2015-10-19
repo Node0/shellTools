@@ -104,7 +104,7 @@ def getServerLoad():
 	try:
 		serverLoad = os.getloadavg()
 	except:
-		return "os.getloadavg_failed"
+		return getServerLoad_BASH()[0].decode('utf-8')
 	serverLoad_formatted = ""
 	for i in serverLoad:
 		serverLoad_formatted += "{}_".format(i)
@@ -269,7 +269,7 @@ def main():
 	if args['mysql_usr'] != None:
 		if "Id" not in sampleMySQL(args['mysql_usr'], args['mysql_pwd']):
 			print("activityLog: MySQL credentials return invalid response")
-			exit()
+			quit()
 
 	### DO ALL THE STUFF
 	topRC()
