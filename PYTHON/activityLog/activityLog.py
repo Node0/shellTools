@@ -42,7 +42,8 @@ def rootFsRwRoStateCheck():
 	# Mount, filtered to whatever is mounted as /, filtered by whether "rw"
 	# is on that line.
 	cmd = "mount | grep -Pi \"^(.+on)(\s{1,})(\/\s)\" | grep -Pio \"(rw)\""
-	if run_command(cmd)[0].rstrip() == "rw":
+	rootrw = run_command(cmd)[0].decode('utf-8')
+	if rootrw.rstrip() == "rw":
 		return True
 	else:
 		return False
@@ -168,35 +169,36 @@ def getTopOutput():
 	# Doesn't work on cygwin, using bottom version in the meantime.
 	# cmd = """top -b -M -H -n1""" 
 	cmd = "top -b -H -n1" 
-	return run_command(cmd)[0]
+	return run_command(cmd)[0].decode('utf-8')
 
 def getNDeviceThroughput():
 	cmd = "netstat -i"
-	return run_command(cmd)[0]
+	return run_command(cmd)[0].decode('utf-8')
 
 def getDaemonsAndPorts():
 	cmd = "netstat -plunt"
-	return run_command(cmd)[0]
+	return run_command(cmd)[0].decode('utf-8')
 
 def getNetworkConnections():
 	cmd = "netstat"
-	return run_command(cmd)[0]
+	return run_command(cmd)[0].decode('utf-8')
 
 def sampleMySQL(user, pwd):
 	# TODO: setup error handling for this
 
 	cmd = "mysql -u{} -p{} --execute \"show full processlist;\"".format(
 		user, pwd)
-	return run_command(cmd)[0]
+	return run_command(cmd)[0].decode('utf-8')
 
 def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 	timestamp = dateString()
+	print(timestamp)
 	actLogDir = os.path.expanduser(actLogDir)
 	createLogDir(args, actLogDir)
 	logcation = "{}/{}".format(actLogDir,logfilename)
 	try:
 		with open(logcation, 'w') as logfile:
-			logfile.write(getTopOutput())
+			logfile.write(str(getTopOutput()))
 			logfile.write("\n\n\n\n\n\n\n")
 			logfile.write("Thoroughput on NetWork Interfaces:\n")
 			logfile.write(getNDeviceThroughput())
