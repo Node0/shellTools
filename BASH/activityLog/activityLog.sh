@@ -130,6 +130,7 @@ processParams "${@}";
 # as well as an interactively called (by the user) mode. When run interactively
 # by the user, activityLog should place the log file in the same directory
 # the script itself.
+
 actLogDir="activityLog"
 centOsVer=$(cat /etc/redhat-release | sed -r 's~(^.+release)(.+)([0-9]\.[0-9]{1,})(.+$)~\3~g');
 
