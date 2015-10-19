@@ -105,7 +105,7 @@ function processParams {
             filenameEpochPrefix=1;
         # For some reason the else clause below has always been triggered, even when
         # the initial test was true setting the first clause to run.
-        #else
+        # else
         #   filenameEpochPrefix=0;
         fi
 
