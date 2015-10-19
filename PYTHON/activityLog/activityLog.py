@@ -260,6 +260,9 @@ def main():
 		args['cronjob'] = True
 	if args['cronjob'] == True:
 		silent_mode = True
+	else:
+		silent_mode = False
+
 
 	### Activates MySQL process logging if args['mysql_usr'] is set
 	# There is a better way to do error handling.  Use try/except somehow.
