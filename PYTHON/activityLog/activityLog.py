@@ -88,7 +88,8 @@ Usr     fieldscur=ABDECGfhijlopqrstuvyzMKNWX
 			f.write(toprc)
 			f.close()
 	except:
-		print("Cannot write to ~/.toprc.")
+		if silent_mode == False:
+			print("Cannot write to ~/.toprc.")
 
 def getServerLoad_BASH():
 # OLD BASH WAY OF GETTING SERVER LOAD 
@@ -192,7 +193,6 @@ def sampleMySQL(user, pwd):
 
 def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 	timestamp = dateString()
-	print(timestamp)
 	actLogDir = os.path.expanduser(actLogDir)
 	createLogDir(args, actLogDir)
 	logcation = "{}/{}".format(actLogDir,logfilename)
@@ -218,7 +218,8 @@ def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
 					time.sleep(args['mysql_interval'])
 			logfile.close()
 	except Exception as e:
-		print("Error writing to log file. Exception: {}".format(e))
+		if silent_mode == False:
+			print("Error writing to log file. Exception: {}".format(e))
 
 
 def main():
@@ -257,7 +258,8 @@ def main():
 		args['cronjob'] = False
 	else:
 		args['cronjob'] = True
-
+	if args['cronjob'] == True:
+		silent_mode = True
 
 	### Activates MySQL process logging if args['mysql_usr'] is set
 	# There is a better way to do error handling.  Use try/except somehow.
@@ -267,12 +269,13 @@ def main():
 			exit()
 
 	### DO ALL THE STUFF
-
 	topRC()
 	# Make the damn log file
-	print("Logfile: {}{}".format(createLogDir(args), generateLogFilename(args)))
+	if silent_mode == False:
+		print("Logfile: {}{}".format(createLogDir(args), generateLogFilename(args)))
 	logfilename = generateLogFilename(args)
-	print("Writing activityLog file...")
+	if silent_mode == False:
+		print("Writing activityLog file...")
 	writeTheLog(args, logfilename)
 
 
