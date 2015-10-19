@@ -259,6 +259,7 @@ def main():
 	else:
 		args['cronjob'] = True
 	if args['cronjob'] == True:
+	# Set silent_mode flag based on whether cronjob or not
 		silent_mode = True
 	else:
 		silent_mode = False
