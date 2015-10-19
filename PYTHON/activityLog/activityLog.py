@@ -59,7 +59,7 @@ def fileWriteTest():
 		# print("Cannot write to root (/) directory.")
 		return False
 
-def topRC():
+def topRC(silent_mode):
 	# Custom ~./toprc config.  I have no idea what is happening here.
 
 	# Expands "~" to user home dir
@@ -191,7 +191,7 @@ def sampleMySQL(user, pwd):
 		user, pwd)
 	return run_command(cmd)[0].decode('utf-8')
 
-def writeTheLog(args, logfilename, actLogDir = "~/activityLog"):
+def writeTheLog(args, silent_mode, logfilename, actLogDir = "~/activityLog"):
 	timestamp = dateString()
 	actLogDir = os.path.expanduser(actLogDir)
 	createLogDir(args, actLogDir)
@@ -272,11 +272,11 @@ def main():
 			quit()
 
 	### DO ALL THE STUFF
-	topRC()
+	topRC(silent_mode)
 	# Make the damn log file
 	if silent_mode == False:
 		print("Logfile: {}{}".format(createLogDir(args), generateLogFilename(args)))
-	logfilename = generateLogFilename(args)
+	logfilename = generateLogFilename(args, silent_mode)
 	if silent_mode == False:
 		print("Writing activityLog file...")
 	writeTheLog(args, logfilename)
