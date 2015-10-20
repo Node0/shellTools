@@ -8,6 +8,8 @@ import argparse
 import time
 import tarfile
 
+### TODO: redesign as a class object (OOP)
+
 # Returns a tuple of the stdout and stderr of a command. 
 # NOTE that the use of shell=True is extremely dangerous from a security standpoint. Using it
 # here because the alternative (parsing each command and argument into a list) makes piping
