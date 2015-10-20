@@ -218,11 +218,10 @@ def writeTheLog(args, silent_mode, logfilename, actLogDir = "~/activityLog"):
 					logfile.write(sampleMySQL(args['mysql_usr'], args['mysql_pwd']))
 					logfile.write("\n\n")
 					time.sleep(args['mysql_interval'])
-
-
 	except Exception as e:
 		if silent_mode == False:
 			print("Error writing to log file. Exception: {}".format(e))
+
 	# Call createTar() and archive this bitch
 	createTar(logfilename, actLogDir)
 
