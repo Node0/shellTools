@@ -217,18 +217,23 @@ def writeTheLog(args, silent_mode, logfilename, actLogDir = "~/activityLog"):
 					logfile.write("\n\n")
 					time.sleep(args['mysql_interval'])
 
-		# Call createTar() and archive this bitch
-		createTar(logfilename, activityLog)
 
 	except Exception as e:
 		if silent_mode == False:
 			print("Error writing to log file. Exception: {}".format(e))
+	# Call createTar() and archive this bitch
+	createTar(logfilename, actLogDir)
 
 def createTar(logfilename, actLogDir = "~/activityLog"):
-	logcation = "{}/{}.tar.gz".format(actLogDir,logfilename)
-	with tarfile.open(logfilename, "w:gz") as tar:
-		tar.add(logcation)
-	print("tarfile created.")
+	logcation = "{}/{}".format(actLogDir,logfilename)
+	tarlogcation = "{}/{}.tar.gz".format(actLogDir,logfilename)
+	try:
+		with tarfile.open(tarlogcation, "w:gz") as tar:
+			tar.add(logcation)
+		os.remove(logcation)
+	except Exception as e:
+		print("Error creating tar.gz file.  Exception {}.".format(e))
+
 
 
 def main():
