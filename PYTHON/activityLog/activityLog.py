@@ -216,10 +216,9 @@ def writeTheLog(args, silent_mode, logfilename, actLogDir = "~/activityLog"):
 					logfile.write(sampleMySQL(args['mysql_usr'], args['mysql_pwd']))
 					logfile.write("\n\n")
 					time.sleep(args['mysql_interval'])
-			logfile.close()
 
-			# Call createTar and archive this bitch
-			createTar(logfilename, activityLog)
+		# Call createTar() and archive this bitch
+		createTar(logfilename, activityLog)
 
 	except Exception as e:
 		if silent_mode == False:
@@ -290,7 +289,7 @@ def main():
 	logfilename = generateLogFilename(args)
 	if silent_mode == False:
 		print("Writing activityLog file...")
-	writeTheLog(args, logfilename, silent_mode)
+	writeTheLog(args, silent_mode, logfilename)
 
 
 if __name__ == '__main__':
