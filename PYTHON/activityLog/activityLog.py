@@ -6,7 +6,7 @@ import platform
 import re
 import argparse
 import time
-import pwd # Not necessary, just a fancy way of getting current real user
+import tarfile
 
 # Returns a tuple of the stdout and stderr of a command. 
 # NOTE that the use of shell=True is extremely dangerous from a security standpoint. Using it
@@ -217,9 +217,19 @@ def writeTheLog(args, silent_mode, logfilename, actLogDir = "~/activityLog"):
 					logfile.write("\n\n")
 					time.sleep(args['mysql_interval'])
 			logfile.close()
+
+			# Call createTar and archive this bitch
+			createTar(logfilename, activityLog)
+
 	except Exception as e:
 		if silent_mode == False:
 			print("Error writing to log file. Exception: {}".format(e))
+
+def createTar(logfilename, actLogDir = "~/activityLog"):
+	logcation = "{}/{}.tar.gz".format(actLogDir,logfilename)
+	with tarfile.open(logfilename, "w:gz") as tar:
+		tar.add(logcation)
+	print("tarfile created.")
 
 
 def main():
@@ -277,10 +287,10 @@ def main():
 	# Make the damn log file
 	if silent_mode == False:
 		print("Logfile: {}{}".format(createLogDir(args), generateLogFilename(args)))
-	logfilename = generateLogFilename(args, silent_mode)
+	logfilename = generateLogFilename(args)
 	if silent_mode == False:
 		print("Writing activityLog file...")
-	writeTheLog(args, logfilename)
+	writeTheLog(args, logfilename, silent_mode)
 
 
 if __name__ == '__main__':
