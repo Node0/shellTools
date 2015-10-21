@@ -199,7 +199,7 @@ def writeTheLog(args, silent_mode, logfilename, actLogDir = "~/activityLog"):
 	logcation = "{}/{}".format(actLogDir,logfilename)
 	try:
 		with open(logcation, 'w') as logfile:
-			logfile.write(str(getTopOutput()))
+			logfile.write(getTopOutput())
 			logfile.write("\n\n\n\n\n\n\n")
 			logfile.write("Thoroughput on NetWork Interfaces:\n")
 			logfile.write(getNDeviceThroughput())
@@ -290,7 +290,7 @@ def main():
 	topRC(silent_mode)
 	# Make the damn log file
 	if silent_mode == False:
-		print("Logfile: {}{}".format(createLogDir(args), generateLogFilename(args)))
+		print("Logfile: {}{}.tar.gz".format(createLogDir(args), generateLogFilename(args)))
 	logfilename = generateLogFilename(args)
 	if silent_mode == False:
 		print("Writing activityLog file...")
