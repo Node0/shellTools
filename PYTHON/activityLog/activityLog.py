@@ -153,11 +153,8 @@ def createLogDir(args, actLogDir = "~/activityLog"):
 	# Will create actLogDir in home dir if cron, current working directory 
 	# if run by user.
 	if args['cronjob'] == True:
-		actLogDir = os.getcwd()
-	else:
 		# Expands "~" to user home dir
 		actLogDir = os.path.expanduser(actLogDir)
-
 		# Clever way to check if directory exists, and create it if it does not
 		# without creating a "race" situation.  Google it.
 		try:
@@ -165,6 +162,8 @@ def createLogDir(args, actLogDir = "~/activityLog"):
 		except OSError:
 			if not os.path.isdir(actLogDir):
 				raise
+	else:
+		actLogDir = "{}/".format(os.getcwd())
 
 	return actLogDir
 
@@ -195,7 +194,7 @@ def sampleMySQL(user, pwd):
 
 def writeTheLog(args, silent_mode, logfilename, actLogDir = "~/activityLog"):
 	timestamp = dateString()
-	actLogDir = os.path.expanduser(actLogDir)
+	actLogDir = createLogDir(args)
 	createLogDir(args, actLogDir)
 	logcation = "{}/{}".format(actLogDir,logfilename)
 	try:
