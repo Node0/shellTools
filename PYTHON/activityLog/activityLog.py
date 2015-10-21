@@ -163,7 +163,7 @@ def createLogDir(args, actLogDir = "~/activityLog"):
 			if not os.path.isdir(actLogDir):
 				raise
 	else:
-		actLogDir = "{}/".format(os.getcwd())
+		actLogDir = "./"
 
 	return actLogDir
 
@@ -283,7 +283,7 @@ def main():
 	# There is a better way to do error handling.  Use try/except somehow.
 	if args['mysql_usr'] != None:
 		if "Id" not in sampleMySQL(args['mysql_usr'], args['mysql_pwd']):
-			print("activityLog: MySQL credentials return invalid response")
+			print("activityLog: MySQL credentials return invalid response.")
 			quit()
 
 	### DO ALL THE STUFF
