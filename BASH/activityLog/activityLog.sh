@@ -56,7 +56,7 @@
 ### promptly uninstall, or remove this software from your computing infrastructure.
 
 function showUsage {
-
+    echo "";
     echo "Usage: $(basename "$0") [-h]|[--help] [--epoch] [--sample-mysql] [--history-length=<number of days>]";
     echo "----------------------------------------------------------------";
     echo "";
