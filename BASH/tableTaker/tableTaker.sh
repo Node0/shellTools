@@ -109,8 +109,8 @@ function processParams {
     hostParam="\-\-[hH][oO][sS][tT]\=";
     userParam="\-\-[uU][sS][eE][rR]\=";
     dbParam="\-\-[dD][aA][tT][aA][bB][aA][sS][eE]\=";
-    outputDirParam="\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=";
     compressionParam="\-\-[cC][oO][mM][pP][rR][eE][sS][sS]";
+    outputDirParam="\-\-[oO][uU][tT][pP][uU][tT][dD][iI][rR]\=";
     ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
 
     # Out of order parameter processing loop (script may be invoked with params given in any order)

@@ -57,18 +57,22 @@
 
 function showUsage {
 
-    clear;
     echo "Usage: $(basename "$0") [-h]|[--help] [--epoch] [--sample-mysql] [--history-length=<number of days>]";
     echo "----------------------------------------------------------------";
+    echo "";
     echo "Parameters with an asterisk are optional:";
     echo "          Help: -h or --help, shows this help page.";
     echo "         Epoch: --epoch, prefixes all snapshot filenames with the unix epoch (useful in some sorting contexts).";
     echo "      Database: --sample-mysql, if non-authenticated access to mysql is available, this parameter will cause";
-    echo "                activityLog to sample mysql for 15 seconds out of each run, collecting a total of 60 snapshots of";
-    echo "          	  mysql activity as revealed through the \"show full processlist\" statement.";
+    echo "                                activityLog to sample mysql for 15 seconds out of each run, collecting";
+    echo "                                a total of 60 snapshots of mysql activity as revealed through the \"show full processlist\"";
+    echo "                                statement.";
+    echo "";
     echo "History Length: --history-length=<number of days>, this parameter will cause activityLog to (at run time) check the";
-    echo "          	  list of snapshots for any which are older than <number of days> old, and delete those snapshots thereby";
-    echo "          	  always keeping the depth (in time) of the list of snapshots at exactly the number of days indicated.";
+    echo "                                list of snapshots for any which are older than <number of days> old, and delete those";
+    echo "                                snapshots thereby always keeping the depth (in time) of the list of snapshots at exactly";
+    echo "                                the number of days indicated.";
+    echo "";
     echo "----------------------------------------------------------------";
     echo -ne "\n";
     exit 1
