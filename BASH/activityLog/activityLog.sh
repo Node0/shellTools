@@ -86,11 +86,14 @@ function processParams {
     # Note: Regexes structured with regard for parameter-case
     # in order to ensure smooth interchangability between grep and sed
     # without regard to version (of sed) or system. Per-tool case
-    # sensitivity flags 'may' have otherwise resulted in more brittle code.
+    # sensitivity flags may have otherwise resulted in more brittle code.
 
-    epochParam="\-\-[eE][pP][oO][cC][hH]";
-    mysqlParam="\-\-[sS][aA][mM][pP][lL][eE]\-[mM][yY][sS][qQ][lL]";
-    fsRwRoParam="\-\-[sS][hH][oO][wW][rR][oO][oO][tT][fF][sS][sS][tT][aA][tT][eE]"
+    helpShort="\-[hH]";
+    helpLong="\-\-[Hh][Ee][Ll][Pp]";
+    epochParam="\-\-[Ee][Pp][Oo][Cc][Hh]";
+    mysqlParam="\-\-[Ss][Aa][Mm][Pp][Ll][Ee]\-[Mm][Yy][Ss][Qq][Ll]";
+    fsRwRoParam="\-\-[Ss][Hh][Oo][Ww][Rr][Oo][Oo][Tt][Ff][Ss][Ss][Tt][Aa][Tt][Ee]";
+    historyLength="\-\-[Hh][Ii][Ss][Tt][Oo][Rr][Yy]\-[Ll][Ee][Gg][Nn][Tt][Hh]\=";
     ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
 
     # Out of order parameter processing loop (script may be invoked with params given in any order)
@@ -99,6 +102,13 @@ function processParams {
     do
         # In general: Detect presence of parameter i.e. ( $(echo ${param} | grep -Po) != "" )
         # then handle the particulars using sed for access if the param is a key:value pair.
+
+        # Handle activityLog history length
+        if [[ "$(echo "${param}" |command grep -Po '('${historyLength}')' )" != "" ]]; then
+        histLength=$(echo "${param}" |command sed -r "s~(${historyLength})~~g");
+        finiteHistory=1;
+        fi
+
 
         # Handle Filename epoch prefix parameter check
         if [[ "$(echo "${param}" |command grep -Po '('${epochParam}')')" != "" ]]; then
