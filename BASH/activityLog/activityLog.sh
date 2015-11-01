@@ -103,6 +103,17 @@ function processParams {
         # In general: Detect presence of parameter i.e. ( $(echo ${param} | grep -Po) != "" )
         # then handle the particulars using sed for access if the param is a key:value pair.
 
+        # Handle help flag detectin and display usage info / help message.
+        if [[ "$(echo "${param}" |command grep -Po '('${helpShort}')' )" != "" ]]; then
+        histLength=$(echo "${param}" |command sed -r "s~(${helpShort})~~g");
+        showHelp=1;
+        fi
+        if [[ "$(echo "${param}" |command grep -Po '('${helpLong}')' )" != "" ]]; then
+        histLength=$(echo "${param}" |command sed -r "s~(${helpLong})~~g");
+        showHelp=1;
+        fi
+
+
         # Handle activityLog history length
         if [[ "$(echo "${param}" |command grep -Po '('${historyLength}')' )" != "" ]]; then
         histLength=$(echo "${param}" |command sed -r "s~(${historyLength})~~g");
