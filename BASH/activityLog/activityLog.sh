@@ -130,7 +130,7 @@ function processParams {
     historyLength="\-\-[Hh][Ii][Ss][Tt][Oo][Rr][Yy]\-[Ll][Ee][Nn][Gg][Tt][Hh]\=";
     ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
 
-    # Out of order parameter processing loop (script may be invoked with params given in any order)
+    # Out of order parameter processing loop (script may be invoked with params given in any order).
     paramList=("${@}");
     for param in "${paramList[@]}";
     do
