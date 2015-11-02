@@ -78,7 +78,14 @@ function showUsage {
     exit 1
 }
 
-
+function isOlderInDaysThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$((${nowInSs} - ${itemAge}));
+itemAgeInDaysOld=$((${itemAgeInSsOld} / 86400)); if (( ${itemAgeInDaysOld} > ${1} )); then echo "1"; else echo "0"; fi }
+function isNewerInDaysThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$((${nowInSs} - ${itemAge}));
+itemAgeInDaysOld=$((${itemAgeInSsOld} / 86400)); if (( ${itemAgeInDaysOld} < ${1} )); then echo "1"; else echo "0"; fi }
+function isOlderInMinsThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$((${nowInSs} - ${itemAge}));
+itemAgeInHoursOld=$((${itemAgeInSsOld} / 60)); if (( ${itemAgeInHoursOld} > ${1} )); then echo "1"; else echo "0"; fi }
+function isNewerInMinsThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$((${nowInSs} - ${itemAge}));
+itemAgeInHoursOld=$((${itemAgeInSsOld} / 60)); if (( ${itemAgeInHoursOld} < ${1} )); then echo "1"; else echo "0"; fi }
 
 # Cronification variables
 # Todo: Wrap this in a function and test for presence of the commands.
@@ -100,6 +107,8 @@ tar=$(which tar);
 rm=$(which rm);
 mkdir=$(which mkdir);
 whoami=$(which whoami);
+find=$(which find);
+
 
 # Set the home directory for this run as the current user's home directory
 homeDirEnvBackup="${HOME}";
@@ -113,12 +122,12 @@ function processParams {
     # without regard to version (of sed) or system. Per-tool case
     # sensitivity flags may have otherwise resulted in more brittle code.
 
-    helpShort="\-[hH]";
-    helpLong="\-\-[Hh][Ee][Ll][Pp]";
+    helpShort="^\-[hH]$";
+    helpLong="^\-\-[Hh][Ee][Ll][Pp]$";
     epochParam="\-\-[Ee][Pp][Oo][Cc][Hh]";
     mysqlParam="\-\-[Ss][Aa][Mm][Pp][Ll][Ee]\-[Mm][Yy][Ss][Qq][Ll]";
     fsRwRoParam="\-\-[Ss][Hh][Oo][Ww][Rr][Oo][Oo][Tt][Ff][Ss][Ss][Tt][Aa][Tt][Ee]";
-    historyLength="\-\-[Hh][Ii][Ss][Tt][Oo][Rr][Yy]\-[Ll][Ee][Gg][Nn][Tt][Hh]\=";
+    historyLength="\-\-[Hh][Ii][Ss][Tt][Oo][Rr][Yy]\-[Ll][Ee][Nn][Gg][Tt][Hh]\=";
     ipAddrRgx="\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b";
 
     # Out of order parameter processing loop (script may be invoked with params given in any order)
@@ -128,23 +137,19 @@ function processParams {
         # In general: Detect presence of parameter i.e. ( $(echo ${param} | grep -Po) != "" )
         # then handle the particulars using sed for access if the param is a key:value pair.
 
-        # Handle help flag detectin and display usage info / help message.
+        # Handle help flag detecting and display usage info / help message.
         if [[ "$(echo "${param}" |command grep -Po '('${helpShort}')' )" != "" ]]; then
-        histLength=$(echo "${param}" |command sed -r "s~(${helpShort})~~g");
         showHelp=1;
         fi
         if [[ "$(echo "${param}" |command grep -Po '('${helpLong}')' )" != "" ]]; then
-        histLength=$(echo "${param}" |command sed -r "s~(${helpLong})~~g");
         showHelp=1;
         fi
-
 
         # Handle activityLog history length
         if [[ "$(echo "${param}" |command grep -Po '('${historyLength}')' )" != "" ]]; then
         histLength=$(echo "${param}" |command sed -r "s~(${historyLength})~~g");
         finiteHistory=1;
         fi
-
 
         # Handle Filename epoch prefix parameter check
         if [[ "$(echo "${param}" |command grep -Po '('${epochParam}')')" != "" ]]; then
@@ -185,6 +190,17 @@ actLogDir="activityLog"
 centOsVer=$(cat /etc/redhat-release | sed -r 's~(^.+release)(.+)([0-9]\.[0-9]{1,})(.+$)~\3~g');
 
 
+# Handle activityLog history length monitoring and trimming
+if (( ${finiteHistory} == 1 )); then
+    for snapshot in $( ${find} ~/"${actLogDir}" -maxdepth 1 -type f );
+    do
+        echo ${snapshot};
+        if (( $( isOlderInDaysThan ${histLength} "${snapshot}" ) == 1 )); then
+            ${rm} -f "${snapshot}";
+        fi
+    done;
+fi
+
 #Grab a timeslice of system activity
 function dateString {
     if [[ $1 == "" ]]; then
@@ -204,7 +220,6 @@ function dateString {
 
 
 function rootFsRwRoStateCheck {
-
 # Test if the root filesystem has been mounted Read/Write or Read-Only
 if [[ $(mount | grep -Pi "^(.+on)(\s{1,})(\/\s)" | grep -Pio "(rw)")  == "rw" ]]; then
 mountRwFlag=1;
@@ -234,8 +249,7 @@ cd ~
 # Todo: Complete the task this started by restoring found .toprc files (if any) after activityLog completes its run.
 if [[ -f ~/.toprc ]];
 then
-    mv ~/.toprc ~/.backup_toprc
-fi
+    mv ~/.toprc ~/.backup_toprc;
 
 echo "RCfile for \"top with windows\"
 Id:a, Mode_altscr=0, Mode_irixps=1, Delay_time=3.000, Curwin=0
@@ -251,9 +265,11 @@ Mem     fieldscur=ANOPQRSTUVbcdefgjlmyzWHIKX
 Usr     fieldscur=ABDECGfhijlopqrstuvyzMKNWX
         winflags=62777, sortindx=4, maxtasks=0
         summclr=3, msgsclr=3, headclr=2, taskclr=3" > ~/.toprc;
+fi
+
 
 function uptimeString {
-    ${uptime} |\
+${uptime} |\
 ${grep} -Pio "average\:(\s\d{1,}\.\d{1,}\,){1,}(\s\d{1,}\.\d{1,})" |\
 ${sed} -r "s~(average\:\s)~~g" |\
 ${sed} -r "s~\,~~g"|\
@@ -355,3 +371,6 @@ fi
 # that we've changed back to how
 # we found them before this script ran.
 HOME="${homeDirEnvBackup}";
+
+# Restore the .toprc file which we backed up previously
+mv ~/.backup_toprc ~/.toprc
