@@ -5,6 +5,7 @@ import subprocess
 import platform
 import re
 import argparse
+from datetime import datetime
 import time
 import tarfile
 
@@ -22,19 +23,12 @@ def run_command(cmd):
 		stderr = subprocess.PIPE).communicate() # stderr in [1]
 
 def dateString(epoch = False):
-	# should we use GMT instead for consistency?
-	localtime = time.localtime() 
 	# returns time from epoch.  ON UNIX, it is 0 hours on Jan. 1st, 1970
 	if epoch == True: 
 		return time.time
 	elif epoch != True:
-		dateTime = "{}_{}_{}__at_{}h_{}m_{}s".format(
-			localtime[1], # month
-			localtime[2], # mday (day of the month)
-			localtime[0], # year
-			localtime[3], # hour
-			localtime[4], # minute
-			localtime[5]) # seconds
+	# using UTC (Similar to GMC)
+		dateTime = datetime.utcnow().strftime("UTC_%mm_%dd_%Yy__at_%Hh_%Mm_%Ss")
 		return dateTime
 
 
