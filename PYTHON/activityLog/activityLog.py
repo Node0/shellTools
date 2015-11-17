@@ -28,7 +28,7 @@ def dateString(epoch = False):
 		return time.time
 	elif epoch != True:
 	# using UTC (Similar to GMC)
-		dateTime = datetime.utcnow().strftime("UTC_%mm_%dd_%Yy__at_%Hh_%Mm_%Ss")
+		dateTime = datetime.utcnow().strftime("%mm_%dd_%Yy__at_UTC_%Hh_%Mm_%Ss")
 		return dateTime
 
 
