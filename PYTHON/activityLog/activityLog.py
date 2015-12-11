@@ -50,7 +50,7 @@ class ActivityLogger(object):
 
 	def dateString(self, epoch = False):
 		# should we use GMT instead for consistency?
-		localtime = time.localtime() 
+		localtime = time.localtime()
 		# returns time from epoch.  ON UNIX, it is 0 hours on Jan. 1st, 1970
 		if epoch == True: 
 			return time.time
@@ -78,7 +78,7 @@ class ActivityLogger(object):
 	def dateString(self, epoch = False):
 		# returns time from epoch.  ON UNIX, it is 0 hours on Jan. 1st, 1970
 		if epoch == True: 
-			return time.time
+			return time.time()
 		elif epoch != True:
 		# using UTC (Similar to GMC)
 			dateTime = datetime.utcnow().strftime("%mm_%dd_%Yy__at_UTC_%Hh_%Mm_%Ss")
@@ -191,7 +191,7 @@ class ActivityLogger(object):
 		# check for epoch filename prefix flag
 		if self.epochflag:
 			# print("Epoch flag is set")
-			thisSliceEpoch = self.dateString(epoch = True) + "-"
+			thisSliceEpoch = str(self.dateString(epoch = True)) + "-"
 		else:
 			thisSliceEpoch = "" # will prefix the filename with nothing
 
@@ -584,7 +584,7 @@ def main():
 	### Activates MySQL process logging if args['mysql_usr'] is set
 	# There is a better way to do error handling.  Use try/except somehow.
 	if args['mysql_usr'] != None:
-		if "Id" not in sampleMySQL(args['mysql_usr'], args['mysql_pwd']):
+		if "Id" not in activitylog.sampleMySQL():
 			print("activityLog: MySQL credentials return invalid response.")
 			quit()
 
