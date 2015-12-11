@@ -41,29 +41,6 @@ class ActivityLogger(object):
 			self.silent_mode = True
 
 
-	def run_command(self, cmd):
-		return subprocess.Popen(
-			cmd, 
-			shell=True, 
-			stdout = subprocess.PIPE, # stdout in [0]
-			stderr = subprocess.PIPE).communicate() # stderr in [1]
-
-	def dateString(self, epoch = False):
-		# should we use GMT instead for consistency?
-		localtime = time.localtime()
-		# returns time from epoch.  ON UNIX, it is 0 hours on Jan. 1st, 1970
-		if epoch == True: 
-			return time.time
-		elif epoch == False:
-			dateTime = "{}_{}_{}__at_{}h_{}m_{}s".format(
-				localtime[1], # month
-				localtime[2], # mday (day of the month)
-				localtime[0], # year
-				localtime[3], # hour
-				localtime[4], # minute
-				localtime[5]) # seconds
-			return dateTime
-
 	# Returns a tuple of the stdout and stderr of a command. 
 	# NOTE that the use of shell=True is extremely dangerous from a security standpoint. Using it
 	# here because the alternative (parsing each command and argument into a list) makes piping
@@ -88,8 +65,10 @@ class ActivityLogger(object):
 	def rootFsRwRoStateCheck(self):
 	# Checks to see if root (/) directory is read/write 
 		try:
+			# Same thing as running "mounts" output
 			with open("/proc/mounts", "r") as f:
 				for line in f:
+					# Look for line with root (/) dir and "rw" in the line
 					if " / " in line and "rw" in line:
 						return True
 				return False
@@ -134,7 +113,6 @@ class ActivityLogger(object):
 
 	def getServerLoad_BASH(self):
 	# OLD BASH WAY OF GETTING SERVER LOAD 
-	# TODO: just read "/proc/loadavg and take first 3 space separated chunks."
 		cmd = ("""uptime | grep -Pio "average\:(\s\d{1,}\.\d{1,}\,){1,}(\s\d{1,}\.\d{1,})" |"""
 		"""sed -r "s~(average\:\s)~~g" |"""
 		"""sed -r "s~\,~~g" |"""
@@ -144,14 +122,18 @@ class ActivityLogger(object):
 
 	def getServerLoad(self):
 		try:
+			# getloadavg() doesn't work on windows or cygwin
 			serverLoad = os.getloadavg()
 		except:
 			try:
+				# /proc/loadavg returns load average.  
+				# needs only the first 3 numbers, separated by spaces
 				with open("/proc/loadavg", "r") as f:
 					f_split = f.read().split(" ")
 					f_joined = "_".join(f_split[:3])
 					return f_joined
 			except:
+				# if all else fails
 				return self.getServerLoad_BASH()[0].decode('utf-8')
 				
 
@@ -319,7 +301,7 @@ def main():
 	args = vars(args)
 	# Initiate the ActivityLogger class object
 	activitylog = ActivityLogger()
-	# Populate activitylog variables from args
+	# Populate activitylog variables from args.  Must be a smarter way to do this.
 	activitylog.epochflag = args['epoch']
 	activitylog.rootcheck = args['rootcheck']
 	activitylog.mysql_usr = args['mysql_usr']
