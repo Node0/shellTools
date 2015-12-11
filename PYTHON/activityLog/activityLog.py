@@ -57,6 +57,7 @@ class ActivityLogger(object):
 			return time.time()
 		elif epoch != True:
 		# using UTC (Similar to GMC)
+		# strftime converts the struct_time format into a string. see documentation
 			dateTime = datetime.utcnow().strftime("%mm_%dd_%Yy__at_UTC_%Hh_%Mm_%Ss")
 			return dateTime
 
@@ -64,7 +65,7 @@ class ActivityLogger(object):
 	def rootFsRwRoStateCheck(self):
 	# Checks to see if root (/) directory is read/write 
 		try:
-			# Same thing as running "mounts" output
+			# Same output as running "mount" in BASH 
 			with open("/proc/mounts", "r") as f:
 				for line in f:
 					# Look for line with root (/) dir and "rw" in the line
