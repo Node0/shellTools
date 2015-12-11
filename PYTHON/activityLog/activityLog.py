@@ -28,7 +28,6 @@ class ActivityLogger(object):
 
 		
 	def checkcronjob(self):
-		print("checkcronjob() has run")
 		# Checks to see if script was run by user, or a cron job.
 		# Will create actLogDir in home dir if cron, current working directory 
 		# if run by user.
