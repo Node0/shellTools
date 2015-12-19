@@ -16,6 +16,8 @@ Each such snapshot is a text file containing the following information.
 **1.)** Top  
 **2.)** Netstat (Complete connection list, Processeslist per port, & Network throughput/interface)  
 **3.)** MySQL processlist (sampled for 15 seconds at 1/4 second resolution)  
+
+(Special thanks to @thefunkjunky for a very clean port of activityLog to python)
   
   
 * __diskSpeedTest__  
