@@ -17,7 +17,7 @@
 # General Information
 # ----------------------------------------------------------------
 # Name: activityLog.sh
-# Version: v0.2
+# Version: v0.3
 # Release: Development
 # Author: Joe Hacobian
 # Usage: Run without parameters for usage info.
