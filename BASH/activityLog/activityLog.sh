@@ -79,13 +79,13 @@ function showUsage {
 }
 
 function isOlderInDaysThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$(( nowInSs - itemAge ));
-itemAgeInDaysOld=$(( itemAgeInSsOld / 86400 )); if (( itemAgeInDaysOld > "${1}" )); then echo "1"; else echo "0"; fi }
+itemAgeInDaysOld=$(( itemAgeInSsOld / 86400 )); if (( itemAgeInDaysOld > ${1} )); then echo "1"; else echo "0"; fi }
 function isNewerInDaysThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$(( nowInSs - itemAge ));
-itemAgeInDaysOld=$(( itemAgeInSsOld / 86400 )); if (( itemAgeInDaysOld < "${1}" )); then echo "1"; else echo "0"; fi }
+itemAgeInDaysOld=$(( itemAgeInSsOld / 86400 )); if (( itemAgeInDaysOld < ${1} )); then echo "1"; else echo "0"; fi }
 function isOlderInMinsThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$(( nowInSs - itemAge ));
-itemAgeInHoursOld=$(( itemAgeInSsOld  / 60 )); if (( itemAgeInHoursOld > "${1}" )); then echo "1"; else echo "0"; fi }
+itemAgeInMinsOld=$(( itemAgeInSsOld  / 60 )); if (( itemAgeInMinsOld > ${1} )); then echo "1"; else echo "0"; fi }
 function isNewerInMinsThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$(( nowInSs - itemAge ));
-itemAgeInHoursOld=$(( itemAgeInSsOld / 60 )); if (( itemAgeInHoursOld < "${1}" )); then echo "1"; else echo "0"; fi }
+itemAgeInMinsOld=$(( itemAgeInSsOld / 60 )); if (( itemAgeInMinsOld < ${1} )); then echo "1"; else echo "0"; fi }
 
 # Cronification variables
 # Todo: Wrap this in a function and test for presence of the commands.
@@ -105,6 +105,7 @@ sleep=$(which sleep);
 gzip=$(which gzip);
 tar=$(which tar);
 rm=$(which rm);
+mv=$(which mv);
 mkdir=$(which mkdir);
 whoami=$(which whoami);
 find=$(which find);
@@ -195,8 +196,8 @@ if (( finiteHistory == 1 )); then
     for snapshot in $( ${find} ~/"${actLogDir}" -maxdepth 1 -type f );
     do
         #echo "${snapshot}";
-        if (( $( isOlderInDaysThan ${histLength} "${snapshot}" ) == 1 )); then
-            ${rm} -f "${snapshot}";
+        if (( $( isOlderInMinsThan ${histLength} "${snapshot}" ) == 1 )); then
+            "${rm}" -f "${snapshot}";
         fi
     done;
 fi
@@ -230,21 +231,21 @@ fi
 # Test if we can actually write to a file (in the filesystem root directory).
 cd /
 testFile="filesystemReadWriteTestFile.txt";
-touch ${testFile};
-echo "Test File Contents" >> ${testFile};
-if [[ -f ${testFile} ]]; then
+touch "${testFile}";
+echo "Test File Contents" >> "${testFile}";
+if [[ -f "${testFile}" ]]; then
 fileWriteTest=1;
 else
 fileWriteTest=0;
 fi
-rm -f ${testFile};
+"${rm}" -f "${testFile}";
 }
 cd ~
 
 
 if [[ -f ~/.toprc ]];
 then
-    mv ~/.toprc ~/.backup_toprc;
+    "${mv}" ~/.toprc ~/.backup_toprc;
 
 echo "RCfile for \"top with windows\"
 Id:a, Mode_altscr=0, Mode_irixps=1, Delay_time=3.000, Curwin=0
@@ -279,6 +280,7 @@ then
     # Generate the date-string as a unix epoch
     thisSliceEpoch=$(dateString epoch);
 
+    #TODO: Figure out where this needs to be a
     # If enabled, run the root filesystem check and alter the filename accordingly
     if (( runRootFsStateCheck == 1 )); then
     rootFsRwRoStateCheck;
@@ -297,7 +299,7 @@ then
 
 elif (( filenameEpochPrefix == 0 )); then
 
-    # If enabled, run the root filesystem check and alter the filename accordingly
+    #TODO: Wrap this in a function and then figure out where we need to call it from for it to be useful.
     if (( runRootFsStateCheck == 1 )); then
     rootFsRwRoStateCheck;
         if (( mountRwFlag == 1 && fileWriteTest == 1 )); then
@@ -316,17 +318,17 @@ fi
 
 # Todo: All of this needs to be cleaned up and wrapped into discrete funtions.
 if [[ ! -d ~/${actLogDir} ]]; then ${mkdir} ~/${actLogDir}; fi
-${touch} ~/${actLogDir}/${logFileName};
-${top} -b -M -H -n1 >>  ~/${actLogDir}/${logFileName};
-echo -ne "\n\n\n\n\n\n\n" >> ~/${actLogDir}/${logFileName};
-echo -ne "Thoroughput on NetWork Interfaces:\n" >> ~/${actLogDir}/${logFileName};
-${netstat} -i >> ~/${actLogDir}/${logFileName};
-echo -ne "\n\n" >> ~/${actLogDir}/${logFileName};
-echo -ne "Daemons and Open Ports list:\n" >> ~/${actLogDir}/${logFileName};
-${netstat} -plunt >> ~/${actLogDir}/${logFileName};
-echo -ne "\n\n" >> ~/${actLogDir}/${logFileName};
-echo -ne "Network Connections:\n" >> ~/${actLogDir}/${logFileName};
-${netstat} >> ~/${actLogDir}/${logFileName};
+"${touch}" ~/"${actLogDir}"/"${logFileName}";
+"${top}" -b -M -H -n1 >>  ~/"${actLogDir}"/"${logFileName}";
+echo -ne "\n\n\n\n\n\n\n" >> ~/"${actLogDir}"/"${logFileName}";
+echo -ne "Thoroughput on NetWork Interfaces:\n" >> ~/"${actLogDir}"/"${logFileName}";
+"${netstat}" -i >> ~/"${actLogDir}"/"${logFileName}";
+echo -ne "\n\n" >> ~/"${actLogDir}"/"${logFileName}";
+echo -ne "Daemons and Open Ports list:\n" >> ~/"${actLogDir}"/"${logFileName}";
+"${netstat}" -plunt >> ~/"${actLogDir}"/"${logFileName}";
+echo -ne "\n\n" >> ~/"${actLogDir}"/"${logFileName}";
+echo -ne "Network Connections:\n" >> ~/"${actLogDir}"/"${logFileName}";
+"${netstat}" >> ~/"${actLogDir}"/"${logFileName}";
 
 echo -ne "\n\n\n\n\n" >> ~/${actLogDir}/${logFileName};
 
@@ -337,9 +339,9 @@ then
 
     for i in {1..60}; do
         echo -ne "\n" >> ~/${actLogDir}/${logFileName};
-        ${mysql} --execute "show full processlist;" >> ~/${actLogDir}/${logFileName};
+        "${mysql}" --execute "show full processlist;" >> ~/${actLogDir}/${logFileName};
         echo -ne "\n\n" >> ~/${actLogDir}/${logFileName};
-        ${sleep} 0.25;
+        "${sleep}" 0.25;
     done;
 
 fi
@@ -347,19 +349,19 @@ fi
 
 # Todo: The '--transform' parameter is not portable across linux distributions (recently issues with RedHat to Debian compatibility)
 # Look more carefully into this.
-# Run tar with the apropriate options (or lack thereof) for the version of CentOS we're on.
+# Run tar with the appropriate options (or lack thereof) for the version of CentOS we're on.
 if (( "${centOsVer:0:1}" == '6' ));
 then
-    ${tar} --transform 's/.*\///g' -czf ~/${actLogDir}/${logFileName}.tar.gz ~/${actLogDir}/${logFileName};
+    "${tar}" --transform 's/.*\///g' -czf ~/${actLogDir}/${logFileName}.tar.gz ~/${actLogDir}/${logFileName};
 elif (( "${centOsVer:0:1}" == '5' ));
 then
-    ${tar}  -czf ~/${actLogDir}/${logFileName}.tar.gz ~/${actLogDir}/${logFileName};
+    "${tar}"  -czf ~/${actLogDir}/${logFileName}.tar.gz ~/${actLogDir}/${logFileName};
 fi
 
 # If the tarball was created, then remove the uncompressed log file.
 if [[ -f ~/${actLogDir}/${logFileName}.tar.gz ]];
 then
-    ${rm} -f ~/${actLogDir}/${logFileName};
+    "${rm}" -f ~/${actLogDir}/${logFileName};
 fi
 
 # Set the environment variables
@@ -368,4 +370,4 @@ fi
 HOME="${homeDirEnvBackup}";
 
 # Restore the .toprc file which we backed up previously
-mv ~/.backup_toprc ~/.toprc
+"${mv}" ~/.backup_toprc ~/.toprc
