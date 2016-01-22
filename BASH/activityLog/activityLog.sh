@@ -78,14 +78,14 @@ function showUsage {
     exit 1
 }
 
-function isOlderInDaysThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$((${nowInSs} - ${itemAge}));
-itemAgeInDaysOld=$((${itemAgeInSsOld} / 86400)); if (( ${itemAgeInDaysOld} > ${1} )); then echo "1"; else echo "0"; fi }
-function isNewerInDaysThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$((${nowInSs} - ${itemAge}));
-itemAgeInDaysOld=$((${itemAgeInSsOld} / 86400)); if (( ${itemAgeInDaysOld} < ${1} )); then echo "1"; else echo "0"; fi }
-function isOlderInMinsThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$((${nowInSs} - ${itemAge}));
-itemAgeInHoursOld=$((${itemAgeInSsOld} / 60)); if (( ${itemAgeInHoursOld} > ${1} )); then echo "1"; else echo "0"; fi }
-function isNewerInMinsThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$((${nowInSs} - ${itemAge}));
-itemAgeInHoursOld=$((${itemAgeInSsOld} / 60)); if (( ${itemAgeInHoursOld} < ${1} )); then echo "1"; else echo "0"; fi }
+function isOlderInDaysThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$(( nowInSs - itemAge ));
+itemAgeInDaysOld=$(( itemAgeInSsOld / 86400 )); if (( itemAgeInDaysOld > "${1}" )); then echo "1"; else echo "0"; fi }
+function isNewerInDaysThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$(( nowInSs - itemAge ));
+itemAgeInDaysOld=$(( itemAgeInSsOld / 86400 )); if (( itemAgeInDaysOld < "${1}" )); then echo "1"; else echo "0"; fi }
+function isOlderInMinsThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$(( nowInSs - itemAge ));
+itemAgeInHoursOld=$(( itemAgeInSsOld  / 60 )); if (( itemAgeInHoursOld > "${1}" )); then echo "1"; else echo "0"; fi }
+function isNewerInMinsThan { nowInSs=$(date +%s); itemAge=$(stat -c%Y "${2}"); itemAgeInSsOld=$(( nowInSs - itemAge ));
+itemAgeInHoursOld=$(( itemAgeInSsOld / 60 )); if (( itemAgeInHoursOld < "${1}" )); then echo "1"; else echo "0"; fi }
 
 # Cronification variables
 # Todo: Wrap this in a function and test for presence of the commands.
@@ -112,7 +112,7 @@ find=$(which find);
 
 # Set the home directory for this run as the current user's home directory
 homeDirEnvBackup="${HOME}";
-currentUsrHomeDir=$(${grep} -P '(^'$(${whoami})')' /etc/passwd | ${awk} 'BEGIN { FS = ":" } ; { print $6 }');
+currentUsrHomeDir=$("${grep}" -P '(^'$(${whoami})')' /etc/passwd | ${awk} 'BEGIN { FS = ":" } ; { print $6 }');
 HOME="${currentUsrHomeDir}";
 
 function processParams {
@@ -191,10 +191,10 @@ centOsVer=$(cat /etc/redhat-release | sed -r 's~(^.+release)(.+)([0-9]\.[0-9]{1,
 
 
 # Handle activityLog history length monitoring and trimming
-if (( ${finiteHistory} == 1 )); then
+if (( finiteHistory == 1 )); then
     for snapshot in $( ${find} ~/"${actLogDir}" -maxdepth 1 -type f );
     do
-        echo ${snapshot};
+        #echo "${snapshot}";
         if (( $( isOlderInDaysThan ${histLength} "${snapshot}" ) == 1 )); then
             ${rm} -f "${snapshot}";
         fi
@@ -232,21 +232,16 @@ cd /
 testFile="filesystemReadWriteTestFile.txt";
 touch ${testFile};
 echo "Test File Contents" >> ${testFile};
-
 if [[ -f ${testFile} ]]; then
 fileWriteTest=1;
 else
 fileWriteTest=0;
 fi
-
 rm -f ${testFile};
 }
-
-
 cd ~
 
 
-# Todo: Complete the task this started by restoring found .toprc files (if any) after activityLog completes its run.
 if [[ -f ~/.toprc ]];
 then
     mv ~/.toprc ~/.backup_toprc;
@@ -269,11 +264,11 @@ fi
 
 
 function uptimeString {
-${uptime} |\
-${grep} -Pio "average\:(\s\d{1,}\.\d{1,}\,){1,}(\s\d{1,}\.\d{1,})" |\
-${sed} -r "s~(average\:\s)~~g" |\
-${sed} -r "s~\,~~g"|\
-${sed} -r "s~\s~__~g"
+"${uptime}" |\
+"${grep}" -Pio "average\:(\s\d{1,}\.\d{1,}\,){1,}(\s\d{1,}\.\d{1,})" |\
+"${sed}" -r "s~(average\:\s)~~g" |\
+"${sed}" -r "s~\,~~g"|\
+"${sed}" -r "s~\s~__~g"
 }
 
 uptimeLabel=$(uptimeString);
