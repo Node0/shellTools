@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/bin/bash
 
 # Notice
 # ----------------------------------------------------------------
@@ -243,11 +243,8 @@ fi
 cd ~
 
 
-if [[ -f ~/.toprc ]];
-then
-    "${mv}" ~/.toprc ~/.backup_toprc;
-
-echo "RCfile for \"top with windows\"
+function configureTop {
+topRcContents="RCfile for \"enhanced top metrics\"
 Id:a, Mode_altscr=0, Mode_irixps=1, Delay_time=3.000, Curwin=0
 Def     fieldscur=AEHIOQTWKNMbcdfgjplrsuvyzX
         winflags=30137, sortindx=10, maxtasks=0
@@ -260,9 +257,36 @@ Mem     fieldscur=ANOPQRSTUVbcdefgjlmyzWHIKX
         summclr=5, msgsclr=5, headclr=4, taskclr=5
 Usr     fieldscur=ABDECGfhijlopqrstuvyzMKNWX
         winflags=62777, sortindx=4, maxtasks=0
-        summclr=3, msgsclr=3, headclr=2, taskclr=3" > ~/.toprc;
-fi
+        summclr=3, msgsclr=3, headclr=2, taskclr=3";
 
+    if [[ $1 == "--setup" ]];
+    then
+        if [[ -f ~/.toprc ]];
+        then
+            prevConfigExists=1;
+            "${mv}" ~/.toprc ~/.backup_toprc;
+            echo "${topRcContents}" > ~/.toprc;
+        else
+            prevConfigExists=0;
+            echo "${topRcContents}" > ~/.toprc;
+        fi
+    fi
+
+    # Restore the .toprc file which we backed up previously
+    if [[ $1 == "--restore" ]];
+    then
+        if [[ -f ~/.backup_toprc && ${prevConfigExists} == 1 ]];
+        then
+            "${mv}" ~/.backup_toprc ~/.toprc
+        else
+                        if [[ -f ~/.toprc && ${prevConfigExists} == 0 ]]
+                        then
+                        "${rm}" -f ~/.toprc;
+                        fi
+                fi
+    fi
+}
+configureTop --setup;
 
 function uptimeString {
 "${uptime}" |\
@@ -368,6 +392,4 @@ fi
 # that we've changed back to how
 # we found them before this script ran.
 HOME="${homeDirEnvBackup}";
-
-# Restore the .toprc file which we backed up previously
-"${mv}" ~/.backup_toprc ~/.toprc
+configureTop --restore;
