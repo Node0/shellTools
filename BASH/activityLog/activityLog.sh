@@ -208,6 +208,14 @@ function dateString {
         dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
         echo "${dateStrng}";
     fi
+    if [[ $1 == "ss" ]]; then
+        dateStrng=$(command date +%s%N | cut -b1-13);
+        echo "${dateStrng}";
+    fi
+    if [[ $1 == "ms" ]]; then
+        dateStrng=$(command date +%s%N | cut -b1-13);
+        echo "${dateStrng}";
+    fi
     if [[ $1 == "epoch" ]]; then
         dateStrng=$(command date +'%s' );
         echo "${dateStrng}";
