@@ -52,7 +52,7 @@ jq=$(which jq);
 
 
 # Fetch Elasticsearch Cluster Health
-esClusterHealthObj=$("${curl}" -s -X GET "localhost:10200/_cluster/health" | "${jq}" '.');
+esClusterHealthObj=$("${curl}" -s -X GET "localhost:9200/_cluster/health" | "${jq}" '.');
 
 # Some Variables
 esClusterUnprocessedShards=$(echo "${esClusterHealthObj}" | "${jq}" -r '. | .["unassigned_shards"] ' );
