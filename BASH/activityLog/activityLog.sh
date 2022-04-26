@@ -202,27 +202,32 @@ if (( finiteHistory == 1 )); then
     done;
 fi
 
-#Grab a timeslice of system activity
+# Modular dateString generation (can be injected into any cron invoked script)
 function dateString {
+    dsDate=$(which \date);
+    dsSed=$(which \sed);
+    dsCut=$(which \cut);
+    dsMd5sum=$(which \md5sum);
+    dsHead=$(which \head);
     if [[ $1 == "" ]]; then
-        dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
+        dateStrng=$( ${dsDate} +'%a %m-%d-%Y at %k%Mh %Ss' | ${dsSed} -r "s~(\s)~_~g" | ${dsSed} -r "s~(__)~_~g" );
         echo "${dateStrng}";
     fi
     if [[ $1 == "ss" ]]; then
-        dateStrng=$(command date +%s%N | cut -b1-13);
+        dateStrng=$( ${dsDate} +%s%N | ${dsCut} -b1-13);
         echo "${dateStrng}";
     fi
     if [[ $1 == "ms" ]]; then
-        dateStrng=$(command date +%s%N | cut -b1-13);
+        dateStrng=$( ${dsDate} +%s%N | ${dsCut} -b1-13);
         echo "${dateStrng}";
     fi
     if [[ $1 == "epoch" ]]; then
-        dateStrng=$(command date +'%s' );
+        dateStrng=$( ${dsDate} +'%s' );
         echo "${dateStrng}";
     fi
     if [[ $1 == "hcode" ]]; then
-        dateStrng=$(command date +'%a %m-%d-%Y at %k%Mh %Ss' |command sed -r "s~(\s)~_~g" |command sed -r "s~(__)~_~g" );
-        hashCode=$(command date +'%N' |md5sum |cut -b 1,3,5,7,9);
+        dateStrng=$( ${dsDate} +'%a %m-%d-%Y at %k%Mh %Ss' | ${dsSed} -r "s~(\s)~_~g" | ${dsSed} -r "s~(__)~_~g" );
+        hashCode=$( ${dsHead} -n 1 /dev/random | ${dsMd5sum} | ${dsCut} -b 1,3,5,7,9);
         echo ""${dateStrng}"-"${hashCode}"";
     fi
 }
