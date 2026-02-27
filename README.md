@@ -7,7 +7,7 @@
 #### - readability (both in source code and tool usage documentation)
 #### - comfort in usage (gentle learning curves with sensible default behaviors)  
 
-##_shellTools includes:_
+## _shellTools includes:_
 * __activityLog__  
 Designed to be run unattended from a cron job, activityLog is a basic  
 "system vitals" logging script which creates system activity 'snapshot' tar.gz files.  
